@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "425330604296",
+    "project_id": "mentorlink01-5d729",
+    "storage_bucket": "mentorlink01-5d729.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:425330604296:android:034f7efa5cbbfd14d0d4bd",
+        "android_client_info": {
+          "package_name": "mx.edu.utng.jtoh.mentorlink13"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGEJ_1eh9BPTB81wxQRsmJaWTPxwpoiZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
