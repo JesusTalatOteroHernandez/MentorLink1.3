@@ -8,10 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -25,9 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.text.contains
 
 
@@ -41,6 +50,14 @@ fun registroTutor(navController: NavController){
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
+
+    var estadoResidencia by remember { mutableStateOf("") }
+    var municipioResidencia by remember { mutableStateOf("") }
+
+    val municipios = estadosConMunicipios[estadoResidencia] ?: emptyList()
+
+    //Variable para el Scrol de la pantalla
+    val scrollState = rememberScrollState()
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(180, 180, 180) //230, 230, 235
@@ -48,9 +65,10 @@ fun registroTutor(navController: NavController){
         //Mantiene todos los componentes adnetro centralizado
         Column(
             modifier = Modifier.fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
 
         ) {
             //Realiza un pequeño apartado para el titulo de la pantalla
@@ -167,19 +185,185 @@ fun registroTutor(navController: NavController){
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        //COMBOBOX PARA EL ESTADO DE RESIDENCIA
+                        Spacer(Modifier.height(16.dp))
+                        Text("Estado de residencia:", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(3.dp))
+
+                        var expandedEstado by remember { mutableStateOf(false) }
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedEstado,
+                            onExpandedChange = { expandedEstado = it },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            OutlinedTextField(
+                                value = estadoResidencia,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Selecciona un estado") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedEstado,
+                                onDismissRequest = { expandedEstado = false }
+                            ) {
+                                estadosConMunicipios.keys.forEach { estado ->
+                                    DropdownMenuItem(
+                                        text = { Text(estado) },
+                                        onClick = {
+                                            estadoResidencia = estado
+                                            municipioResidencia = ""
+                                            expandedEstado = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        //COMBOBOX PARA EL MUNICIPIO DE RESIDENCIA
+                        Spacer(Modifier.height(16.dp))
+                        Text("Municipio de residencia:", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(3.dp))
+
+                        var expandedMunicipio by remember { mutableStateOf(false) }
+
+                        ExposedDropdownMenuBox(
+                            expanded = expandedMunicipio,
+                            onExpandedChange = { expandedMunicipio = it },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            OutlinedTextField(
+                                value = municipioResidencia,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = municipios.isNotEmpty(),
+                                label = {
+                                    Text(
+                                        if (estadoResidencia.isEmpty())
+                                            "Seleccione un estado primero"
+                                        else
+                                            "Seleccione un municipio"
+                                    )
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMunicipio)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expandedMunicipio,
+                                onDismissRequest = { expandedMunicipio = false }
+                            ) {
+                                municipios.forEach { municipio ->
+                                    DropdownMenuItem(
+                                        text = { Text(municipio) },
+                                        onClick = {
+                                            municipioResidencia = municipio
+                                            expandedMunicipio = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    //Boton para continuar
+                    //Boton para registrar tutor
+                    var message by remember { mutableStateOf("") }
+                    val auth = FirebaseAuth.getInstance()
+                    val db = FirebaseFirestore.getInstance()
+                    val context = LocalContext.current
+                    FirebaseApp.initializeApp(context)
                     Button(
                         modifier = Modifier,
                         colors = ButtonDefaults.buttonColors(Color(37, 99, 135)),
                         onClick = {
+                            // VALIDACIONES
+                            if (email.isBlank() || nuevoPassword.isBlank() || passwordNuevamente.isBlank() ||
+                                nombre.isBlank() || apellido.isBlank() || edad.isBlank() ||
+                                estadoResidencia.isBlank() || municipioResidencia.isBlank()
+                            ) {
+                                message = "Completa todos los campos"
+                                return@Button
+                            }
 
+                            if (nuevoPassword != passwordNuevamente) {
+                                message = "Las contraseñas no coinciden"
+                                return@Button
+                            }
+
+                            // CREAR USUARIO EN AUTH
+                            auth.createUserWithEmailAndPassword(email, nuevoPassword)
+                                .addOnSuccessListener { authResult ->
+
+                                    val userId = authResult.user?.uid ?: return@addOnSuccessListener
+
+                                    // =======================================
+                                    // 1️⃣ CREAR DOCUMENTO EN "instructores"
+                                    // =======================================
+                                    val instructorId = db.collection("instructores").document().id
+
+                                    val instructorData = hashMapOf(
+                                        "id" to instructorId,
+                                        "idUsuario" to userId,
+                                        "puntuacion" to "" //Estara asi hasta que implementemos el sistema de puntuacion
+                                    )
+
+                                    db.collection("instructores")
+                                        .document(instructorId)
+                                        .set(instructorData)
+                                        .addOnSuccessListener {
+
+                                            // =======================================
+                                            // 2️⃣ GUARDAR DATOS EN "usuarios"
+                                            // =======================================
+                                            val usuarioData = hashMapOf(
+                                                "id" to userId,
+                                                "nombre" to nombre,
+                                                "apellidos" to apellido,
+                                                "edad" to edad.toIntOrNull(),
+                                                "correoElectronico" to email,
+                                                "municipioResidencia" to municipioResidencia,
+                                                "estadoResidencia" to estadoResidencia,
+                                                "password" to "", // NO guardar contraseñas reales
+                                                "tipoUsuario" to "tutor"   // ⭐ para diferenciarlos
+                                            )
+
+                                            db.collection("usuarios")
+                                                .document(userId)
+                                                .set(usuarioData)
+                                                .addOnSuccessListener {
+                                                    message = "Tutor registrado correctamente"
+                                                    navController.navigate("pantalla_inicio")
+                                                }
+                                                .addOnFailureListener {
+                                                    message = "Error al guardar en usuarios"
+                                                }
+                                        }
+                                        .addOnFailureListener {
+                                            message = "Error al guardar en instructores"
+                                        }
+                                }
+                                .addOnFailureListener {
+                                    message = "Error al crear usuario"
+                                }
                         }
 
                     ) {
-                        Text("Siguiente")
+                        Text("Registrate")
                     }
 
                     Spacer(Modifier.height(16.dp))
