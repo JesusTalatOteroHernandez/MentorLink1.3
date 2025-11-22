@@ -347,7 +347,7 @@ fun registroTutor(navController: NavController){
                                                 .set(usuarioData)
                                                 .addOnSuccessListener {
                                                     message = "Tutor registrado correctamente"
-                                                    navController.navigate("pantalla_inicio")
+                                                    navController.navigate("pantalla_registro_asesoria")
                                                 }
                                                 .addOnFailureListener {
                                                     message = "Error al guardar en usuarios"
@@ -363,7 +363,7 @@ fun registroTutor(navController: NavController){
                         }
 
                     ) {
-                        Text("Registrate")
+                        Text("Siguiente")
                     }
 
                     Spacer(Modifier.height(16.dp))
