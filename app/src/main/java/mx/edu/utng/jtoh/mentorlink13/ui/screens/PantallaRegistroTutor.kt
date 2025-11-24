@@ -1,5 +1,16 @@
 package mx.edu.utng.jtoh.mentorlink13.ui.screens
+/*
 
+cobro 500
+(número)
+id "rjqbHUbWOC1qpgn4c97y"
+(cadena)
+idUsuario "X9wC5hElJAeabW8Bjgpmf5LdzMi2"
+(cadena)
+modalidad "Virtual y Presencial"
+(cadena)
+puntuacion 5
+ */
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -319,7 +330,7 @@ fun registroTutor(navController: NavController){
                                     val instructorData = hashMapOf(
                                         "id" to instructorId,
                                         "idUsuario" to userId,
-                                        "puntuacion" to "" //Estara asi hasta que implementemos el sistema de puntuacion
+                                        "puntuacion" to 0 //Estara asi hasta que implementemos el sistema de puntuacion
                                     )
 
                                     db.collection("instructores")
@@ -347,7 +358,7 @@ fun registroTutor(navController: NavController){
                                                 .set(usuarioData)
                                                 .addOnSuccessListener {
                                                     message = "Tutor registrado correctamente"
-                                                    navController.navigate("pantalla_registro_asesoria")
+                                                    navController.navigate("pantalla_epecialidad_tutor")
                                                 }
                                                 .addOnFailureListener {
                                                     message = "Error al guardar en usuarios"

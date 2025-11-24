@@ -357,7 +357,7 @@ fun registroAprendiz(navController: NavController){
                                     val aprendizData = hashMapOf(
                                         "id" to aprendizId,
                                         "idUsuario" to userId,
-                                        "puntuacion" to "" //Estara asi hasta que implementemos el sistema de puntuacion
+                                        "puntuacion" to 0 //Estara asi hasta que implementemos el sistema de puntuacion
                                     )
 
                                     db.collection("aprendices")
