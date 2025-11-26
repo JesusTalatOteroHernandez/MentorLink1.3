@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.text.contains
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,18 +132,60 @@ fun pantallaDeInicio(navController: NavController) {
                     Text("Ver contraseña")
                 }
 
-                val auth = FirebaseAuth.getInstance()
                 //Boton para iniciar sesion
+                val auth = FirebaseAuth.getInstance()
+                val db = FirebaseFirestore.getInstance()
+
                 Button(
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp)
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
+                        .padding(horizontal = 50.dp),
                     onClick = {
                         auth.signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
-                                    navController.navigate("pantalla_de_inicio")
+
+                                    val userId = auth.currentUser?.uid
+
+                                    if (userId == null) {
+                                        message = "Error inesperado"
+                                        return@addOnCompleteListener
+                                    }
+
+                                    // 🔥 Buscar al usuario en Firestore
+                                    db.collection("usuarios")
+                                        .document(userId)
+                                        .get()
+                                        .addOnSuccessListener { document ->
+
+                                            if (!document.exists()) {
+                                                message = "Usuario no encontrado en Firestore"
+                                                return@addOnSuccessListener
+                                            }
+
+                                            val tipo = document.getString("tipoUsuario") ?: ""
+
+                                            when (tipo) {
+
+                                                "tutor" -> {
+                                                    // Ir a la pantalla del instructor
+                                                    navController.navigate("pantalla_de_inicio_instructor")
+                                                }
+
+                                                "aprendiz" -> {
+                                                    // Ir a la pantalla principal del aprendiz
+                                                    navController.navigate("pantalla_de_inicio_aprendiz")
+                                                }
+
+                                                else -> {
+                                                    message = "Tipo de usuario no válido: $tipo"
+                                                }
+                                            }
+                                        }
+                                        .addOnFailureListener {
+                                            message = "Error al obtener datos del usuario"
+                                        }
+
                                 } else {
                                     message = "Correo o contraseña incorrectas"
                                 }
@@ -151,6 +194,7 @@ fun pantallaDeInicio(navController: NavController) {
                 ) {
                     Text("Iniciar sesión")
                 }
+
                 Spacer(Modifier.height(2.dp))
                 Text(message)
 

@@ -1,5 +1,8 @@
 package mx.edu.utng.jtoh.mentorlink13.ui.screens
 
+/**
+ * Esta pagina es solamente de ejemplo
+ */
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +25,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaginaDeInicio(navController: NavController) {
+fun PaginaDeInicioInstructor(navController: NavController) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -52,7 +55,7 @@ fun PaginaDeInicio(navController: NavController) {
                             navController.navigate("pantalla_inicio")
                         }
                     ) {
-                        Text("Ingresaste")
+                        Text("Ingresaste como tutor")
                     }
 
                     Spacer(Modifier.height(16.dp))

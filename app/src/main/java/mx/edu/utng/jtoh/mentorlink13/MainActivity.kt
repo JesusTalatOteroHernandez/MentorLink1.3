@@ -23,7 +23,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.EspecialidadTutor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaDeInicio
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaDeInicioAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaDeInicioInstructor
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroTutor
 
@@ -54,8 +55,11 @@ class MainActivity : ComponentActivity() {
                     composable("pantalla_registro_tutor") {
                         registroTutor(navController)
                     }
-                    composable("pantalla_de_inicio") {
-                        PaginaDeInicio(navController)
+                    composable("pantalla_de_inicio_instructor") {
+                        PaginaDeInicioInstructor(navController)
+                    }
+                    composable("pantalla_de_inicio_aprendiz"){
+                        PaginaDeInicioAprendiz(navController)
                     }
                     composable("pantalla_epecialidad_tutor") {
                         EspecialidadTutor(navController)
