@@ -31,6 +31,7 @@ import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaPrincipalAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarInstructor
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructorEditable
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.SolicitarAsesoria
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroTutor
@@ -104,6 +105,12 @@ class MainActivity : ComponentActivity() {
                         val idInstructor = backStackEntry.arguments?.getString("idInstructor") ?: ""
                         PantallaCalificarInstructor(navController, idInstructor)
                     }
+
+                    composable("pantalla_editable_de_instructor/{idInstructor}") { backStackEntry ->
+                        val idInstructor = backStackEntry.arguments?.getString("idInstructor") ?: ""
+                        PerfilInstructorEditable(navController)
+                    }
+
                 }
             }
         }

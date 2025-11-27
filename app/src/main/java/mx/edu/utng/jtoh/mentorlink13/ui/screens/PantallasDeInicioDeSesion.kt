@@ -169,7 +169,7 @@ fun pantallaDeInicio(navController: NavController) {
 
                                                 "tutor" -> {
                                                     // Ir a la pantalla del instructor
-                                                    navController.navigate("pantalla_de_inicio_tutor")
+                                                    navController.navigate("pantalla_editable_de_instructor/{idInstructor}")
                                                 }
 
                                                 "aprendiz" -> {
