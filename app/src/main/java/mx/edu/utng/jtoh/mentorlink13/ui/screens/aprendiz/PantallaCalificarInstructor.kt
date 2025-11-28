@@ -60,6 +60,7 @@ import androidx.navigation.NavController
 fun PantallaCalificarInstructor(
     navController: NavController,
     idInstructor: String,
+    id: String
 ) {
     val firestore = Firebase.firestore
     val auth = Firebase.auth
@@ -113,7 +114,7 @@ fun PantallaCalificarInstructor(
         enviando = true
 
         val opinion = hashMapOf(
-            "idAsesoria" to "",
+            "idAsesoria" to id,
             "idEmisor" to currentUserId,
             "idReceptor" to idInstructor,
             "opinion" to experiencia,

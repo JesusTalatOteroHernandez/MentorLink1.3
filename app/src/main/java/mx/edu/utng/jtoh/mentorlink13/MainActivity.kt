@@ -107,9 +107,10 @@ class MainActivity : ComponentActivity() {
                         PantallaCalificarAprendiz(navController, idAprendiz, idAsesoria)
                     }
 
-                    composable("calificar_instructor/{idInstructor}") { backStackEntry ->
+                    composable("calificar_instructor/{idInstructor}/{id}") { backStackEntry ->
                         val idInstructor = backStackEntry.arguments?.getString("idInstructor") ?: ""
-                        PantallaCalificarInstructor(navController, idInstructor)
+                        val id = backStackEntry.arguments?.getString("idInstructor") ?: ""
+                        PantallaCalificarInstructor(navController, idInstructor,id)
                     }
 
                     composable("pantalla_editable_de_instructor/{idInstructor}") { backStackEntry ->

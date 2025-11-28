@@ -78,7 +78,7 @@ fun PaginaNotificacionesAprendiz(
         // Obtener todas las asesorías donde el usuario actual es el aprendiz
         firestore.collection("asesorias")
             .whereEqualTo("idAprendiz", currentUserId)
-            .whereEqualTo("estado", "Aceptada")
+            .whereEqualTo("estado", "Finalizada")
             .get()
             .addOnSuccessListener { asesoriasSnapshot ->
                 Log.d("Notificaciones", "Asesorías aceptadas encontradas: ${asesoriasSnapshot.size()}")
