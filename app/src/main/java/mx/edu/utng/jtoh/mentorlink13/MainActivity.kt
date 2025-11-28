@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -40,6 +41,7 @@ import mx.edu.utng.jtoh.mentorlink13.ui.splash.SplashScreenAvanzado
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
 
@@ -50,13 +52,13 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = "pantalla_inicio"
+                    startDestination = "spalsh"
                 ) {
                     composable("spalsh"){
-                        SplashScreenAvanzado(navController)
+                        SplashScreenAvanzado(navController = navController)
                     }
                     composable("pantalla_inicio") {
-                        pantallaDeInicio(navController)
+                        pantallaDeInicio(navController = navController)
                     }
                     composable("pantalla_registro") {
                         Registro(navController)

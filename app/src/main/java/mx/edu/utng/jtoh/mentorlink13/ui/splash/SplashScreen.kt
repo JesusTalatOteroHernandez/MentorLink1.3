@@ -39,7 +39,7 @@ fun SplashScreenAvanzado(navController: NavController) {
             animationSpec = tween(durationMillis = 1000)
         )
         delay(2500)
-        navController.navigate("login") {
+        navController.navigate("pantalla_inicio") {
             popUpTo("splash") { inclusive = true }
         }
     }
@@ -60,18 +60,20 @@ fun SplashScreenAvanzado(navController: NavController) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_mentor_link),
+            Icon(
+                imageVector = Icons.Default.School,
                 contentDescription = "Logo",
+                tint = Color.White,
                 modifier = Modifier
                     .size(120.dp)
                     .scale(scale.value)
+                    .alpha(alpha.value)
             )
 
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "TutorApp",
+                text = "MentorLink",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,

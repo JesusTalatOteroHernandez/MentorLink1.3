@@ -1,6 +1,7 @@
 package mx.edu.utng.jtoh.mentorlink13.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -152,7 +153,7 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF2B5FDB))
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(horizontal = 25.dp, vertical = 25.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = {
@@ -164,7 +165,12 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Atrás",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(35.dp)
+                            .clickable(
+                                onClick = {
+                                    navController.navigate("pantalla_de_inicio_aprendiz")
+                                }
+                            )
                     )
                 }
                 Spacer(Modifier.width(8.dp))

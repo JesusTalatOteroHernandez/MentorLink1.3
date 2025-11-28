@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.MarkunreadMailbox
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -87,6 +88,8 @@ fun PaginaInstructor(navController: NavController){
     var showDialogCerrarSesion by remember { mutableStateOf(false) }
     var showDialogSalir by remember { mutableStateOf(false) }
 
+
+
     LaunchedEffect(currentUserId) {
         if (currentUserId != null) {
             // 1. Obtener datos del instructor
@@ -104,6 +107,9 @@ fun PaginaInstructor(navController: NavController){
                                     val instructorDoc = instructorDocs.documents[0]
                                     instructorId = instructorDoc.id
 
+                                    // ✅ CARGAR contador de asesorías completadas desde instructores
+                                    asesoriasCompletadas = instructorDoc.getLong("asesoriasCompletadas")?.toInt() ?: 0
+
                                     // 2. Calcular calificación promedio y total de reseñas
                                     db.collection("opiniones")
                                         .whereEqualTo("idReceptor", instructorId)
@@ -119,16 +125,7 @@ fun PaginaInstructor(navController: NavController){
                                             }
                                         }
 
-                                    // 3. Contar asesorías completadas
-                                    db.collection("asesorias")
-                                        .whereEqualTo("idInstructor", instructorId)
-                                        .whereEqualTo("estado", "Finalizada")
-                                        .get()
-                                        .addOnSuccessListener { asesorias ->
-                                            asesoriasCompletadas = asesorias.size()
-                                        }
-
-                                    // 4. Obtener solicitudes pendientes
+                                    // 3. Obtener solicitudes pendientes
                                     db.collection("asesorias")
                                         .whereEqualTo("idInstructor", instructorId)
                                         .whereEqualTo("estado", "Pendiente")
@@ -153,7 +150,7 @@ fun PaginaInstructor(navController: NavController){
                                             }
                                         }
 
-                                    // 5. Obtener asesorías aceptadas (pendientes de realizarse)
+                                    // 4. Obtener asesorías aceptadas (pendientes de realizarse)
                                     db.collection("asesorias")
                                         .whereEqualTo("idInstructor", instructorId)
                                         .whereEqualTo("estado", "Aceptada")
@@ -324,16 +321,15 @@ fun PaginaInstructor(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                    //.padding(top = 20.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
+                elevation = CardDefaults.cardElevation(30.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(37, 99, 235)
                 ),
                 shape = RoundedCornerShape(30.dp)
             ){
                 Column(
-                    modifier = Modifier.padding(16.dp)
-                        .padding(top = 18.dp)
+                    modifier = Modifier.padding(25.dp)
+                        .padding(top = 25.dp)
                 ) {
                     Row {
                         Column {
@@ -349,7 +345,7 @@ fun PaginaInstructor(navController: NavController){
 
                         Column {
                             Icon(
-                                imageVector = Icons.Default.Person,
+                                imageVector = Icons.Default.Logout,
                                 contentDescription = "Usuario",
                                 tint = Color.DarkGray,
                                 modifier = Modifier
@@ -403,7 +399,7 @@ fun PaginaInstructor(navController: NavController){
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp),
+                    .height(125.dp),
                 elevation = CardDefaults.cardElevation(5.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(255, 255, 255)
@@ -713,7 +709,21 @@ fun PaginaInstructor(navController: NavController){
                                         db.collection("asesorias").document(asesoriaId)
                                             .update("estado", "Aceptada")
                                             .addOnSuccessListener {
-                                                showAceptarDialog = true
+                                                // ✅ INCREMENTAR contador en la colección instructores
+                                                if (instructorId.isNotEmpty()) {
+                                                    db.collection("instructores").document(instructorId)
+                                                        .get()
+                                                        .addOnSuccessListener { doc ->
+                                                            val asesoriaActuales = doc.getLong("asesoriasCompletadas")?.toInt() ?: 0
+                                                            db.collection("instructores").document(instructorId)
+                                                                .update("asesoriasCompletadas", asesoriaActuales + 1)
+                                                                .addOnSuccessListener {
+                                                                    // Actualizar el estado local
+                                                                    asesoriasCompletadas += 1
+                                                                    showAceptarDialog = true
+                                                                }
+                                                        }
+                                                }
                                             }
                                     },
                                 colors = CardDefaults.cardColors(

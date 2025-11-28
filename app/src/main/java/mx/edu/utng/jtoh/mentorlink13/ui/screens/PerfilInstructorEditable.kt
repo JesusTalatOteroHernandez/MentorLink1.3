@@ -2,6 +2,7 @@ package mx.edu.utng.jtoh.mentorlink13.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -213,6 +214,25 @@ fun PerfilInstructorEditable(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+
+                IconButton(onClick = {
+                    navController.navigate("pantalla_de_inicio_tutor") {
+                        popUpTo("pantalla_de_inicio_tutor") { inclusive = true }
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Atrás",
+                        tint = Color.White,
+                        modifier = Modifier.size(35.dp)
+                            .clickable(
+                                onClick = {
+                                    navController.navigate("pantalla_de_inicio_tutor")
+                                }
+                            )
+                    )
+                }
+
                 Text(
                     text = "Mi Perfil",
                     color = Color.White,
