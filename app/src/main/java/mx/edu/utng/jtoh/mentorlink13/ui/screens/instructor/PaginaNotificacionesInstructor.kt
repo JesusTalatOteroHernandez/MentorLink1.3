@@ -1,4 +1,4 @@
-package mx.edu.utng.jtoh.mentorlink13.ui.screens
+package mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -50,8 +50,6 @@ import androidx.navigation.NavController
 import com.google.firebase.firestore.firestore
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +134,7 @@ fun PaginaNotificacionesInstructor(
                                     // Verificar si ya existe una opinión para esta asesoría
                                     firestore.collection("opiniones")
                                         .whereEqualTo("idAsesoria", idAsesoria)
-                                        .whereEqualTo("idEmisor", idInstructor)
+                                        .whereEqualTo("idEmisor", currentUserId)
                                         .whereEqualTo("idReceptor", idAprendiz)
                                         .get()
                                         .addOnSuccessListener { opinionesSnapshot ->
@@ -197,38 +195,6 @@ fun PaginaNotificacionesInstructor(
                                                             loading = false
                                                         }
                                                     }
-                                                /** Obtener nombre del aprendiz
-                                                firestore.collection("usuarios")
-                                                .document()
-                                                .get()
-                                                .addOnSuccessListener { usuarioDoc ->
-                                                val nombreAprendiz = usuarioDoc.getString("nombre") ?: "Aprendiz"
-                                                val apellidosAprendiz = usuarioDoc.getString("apellidos") ?: ""
-
-                                                val asesoriaData = mapOf(
-                                                "id" to idAsesoria,
-                                                "idAprendiz" to idAprendiz,
-                                                "nombreAprendiz" to "$nombreAprendiz $apellidosAprendiz",
-                                                "tema" to (asesoriaDoc.getString("tema") ?: ""),
-                                                "fecha" to fechaStr,
-                                                "hora" to horaStr
-                                                )
-
-                                                asesoriasList.add(asesoriaData)
-
-                                                procesadas++
-                                                if (procesadas == totalAsesorias) {
-                                                evaluacionesPendientes = asesoriasList.toList()
-                                                loading = false
-                                                }
-                                                }
-                                                .addOnFailureListener {
-                                                procesadas++
-                                                if (procesadas == totalAsesorias) {
-                                                evaluacionesPendientes = asesoriasList.toList()
-                                                loading = false
-                                                }
-                                                }*/
                                             } else {
                                                 procesadas++
                                                 if (procesadas == totalAsesorias) {
@@ -349,7 +315,7 @@ fun PaginaNotificacionesInstructor(
                                     Log.d("EvaluacionCard", "Navegando con idAprendiz: '$idAprendiz'")
 
                                     if (idAprendiz.isNotEmpty()) {
-                                        navController.navigate("calificar_aprendiz/$idAprendiz/${asesoria["idAsesoria"]}")
+                                        navController.navigate("calificar_aprendiz/$idAprendiz/${asesoria["id"]}")
                                     } else {
                                         Log.e("EvaluacionCard", "ERROR: idAprendiz está vacío, no se puede navegar")
                                     }

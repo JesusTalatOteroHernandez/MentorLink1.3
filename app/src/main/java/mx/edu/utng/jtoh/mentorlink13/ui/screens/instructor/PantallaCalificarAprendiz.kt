@@ -1,4 +1,4 @@
-package mx.edu.utng.jtoh.mentorlink13.ui.screens
+package mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

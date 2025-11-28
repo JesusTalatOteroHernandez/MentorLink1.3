@@ -1,4 +1,4 @@
-package mx.edu.utng.jtoh.mentorlink13.ui.screens
+package mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -4,43 +4,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.Registro
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.pantallaDeInicio
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario.Registro
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario.pantallaDeInicio
 import mx.edu.utng.jtoh.mentorlink13.ui.theme.MentorLink13Theme
 import androidx.navigation.compose.rememberNavController
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.FirebaseApp
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.EditarPerfilAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.EspecialidadTutor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaCategoria
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaInstructor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaNotificacionesAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaNotificacionesInstructor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaPrincipalAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarInstructor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilAprendizVer
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructor
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructorEditable
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.SolicitarAsesoria
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroAprendiz
-import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroTutor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.EditarPerfilAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario.EspecialidadTutor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PaginaCategoria
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor.PaginaInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PaginaNotificacionesAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor.PaginaNotificacionesInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PaginaPrincipalAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor.PantallaCalificarAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PantallaCalificarInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PerfilAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor.PerfilAprendizVer
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.PerfilInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.instructor.PerfilInstructorEditable
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz.SolicitarAsesoria
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario.registroAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario.registroTutor
 import mx.edu.utng.jtoh.mentorlink13.ui.splash.SplashScreenAvanzado
 
 
@@ -112,21 +101,10 @@ class MainActivity : ComponentActivity() {
                         PantallaCalificarAprendiz(navController,idAprendiz, idAsesoria)
                     }*/
 
-                    composable(
-                        route = "calificar_aprendiz/{idAprendiz}/{idAsesoria}",
-                        arguments = listOf(
-                            navArgument("idAprendiz") { type = NavType.StringType },
-                            navArgument("idAsesoria") { type = NavType.StringType }
-                        )
-                    ) { backStackEntry ->
+                    composable("calificar_aprendiz/{idAprendiz}/{idAsesoria}"){ backStackEntry ->
                         val idAprendiz = backStackEntry.arguments?.getString("idAprendiz") ?: ""
                         val idAsesoria = backStackEntry.arguments?.getString("idAsesoria") ?: ""
-
-                        PantallaCalificarAprendiz(
-                            navController = navController,
-                            idAprendiz = idAprendiz,
-                            idAsesoria = idAsesoria
-                        )
+                        PantallaCalificarAprendiz(navController, idAprendiz, idAsesoria)
                     }
 
                     composable("calificar_instructor/{idInstructor}") { backStackEntry ->

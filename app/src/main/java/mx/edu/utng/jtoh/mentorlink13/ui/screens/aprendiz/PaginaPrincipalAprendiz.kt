@@ -1,4 +1,4 @@
-package mx.edu.utng.jtoh.mentorlink13.ui.screens
+package mx.edu.utng.jtoh.mentorlink13.ui.screens.aprendiz
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -109,6 +109,8 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                 val listaTemp = mutableListOf<Map<String, Any>>()
                 var consultasRestantes = instructoresSnapshot.size()
 
+                val user = FirebaseAuth.getInstance().currentUser
+                userId = user?.uid ?: ""
                 if (consultasRestantes == 0) {
                     instructores = emptyList()
                     return@addOnSuccessListener

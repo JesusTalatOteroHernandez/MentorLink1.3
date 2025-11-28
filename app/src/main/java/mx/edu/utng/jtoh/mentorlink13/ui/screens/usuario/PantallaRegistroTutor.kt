@@ -1,10 +1,17 @@
-package mx.edu.utng.jtoh.mentorlink13.ui.screens
+package mx.edu.utng.jtoh.mentorlink13.ui.screens.usuario
+/*
 
-import android.util.Log
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
+cobro 500
+(número)
+id "rjqbHUbWOC1qpgn4c97y"
+(cadena)
+idUsuario "X9wC5hElJAeabW8Bjgpmf5LdzMi2"
+(cadena)
+modalidad "Virtual y Presencial"
+(cadena)
+puntuacion 5
+ */
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,13 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -34,75 +38,40 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.text.contains
 
-val estadosConMunicipios = mapOf(
-    "Aguascalientes" to listOf("Aguascalientes", "Asientos", "Calvillo", "Jesús María"),
-    "Baja California" to listOf("Ensenada", "Mexicali", "Tecate", "Tijuana"),
-    "Baja California Sur" to listOf("La Paz", "Los Cabos", "Comondú", "Loreto"),
-    "Campeche" to listOf("Carmen", "Campeche", "Champotón"),
-    "Coahuila" to listOf("Saltillo", "Torreón", "Monclova"),
-    "Colima" to listOf("Colima", "Manzanillo", "Tecomán"),
-    "Chiapas" to listOf("Tuxtla", "Tapachula", "San Cristóbal"),
-    "Chihuahua" to listOf("Chihuahua", "Juárez", "Cuauhtémoc"),
-    "Ciudad de México" to listOf(
-        "Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa",
-        "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "Magdalena Contreras",
-        "Miguel Hidalgo", "Milpa Alta", "Tláhuac", "Tlalpan", "Venustiano Carranza", "Xochimilco"
-    ),
-    "Durango" to listOf("Durango", "Lerdo", "Gómez Palacio"),
-    "Guanajuato" to listOf(
-        "León", "Irapuato", "Celaya", "Salamanca", "Guanajuato",
-        "Silao", "San Miguel de Allende", "Dolores Hidalgo", "Valle de Santiago",
-        "Abasolo", "Pénjamo", "Cortazar", "San Luis de la Paz", "Moroleón"
-    ),
-    "Jalisco" to listOf("Guadalajara", "Zapopan", "Tlaquepaque", "Tonalá", "Puerto Vallarta"),
-    "México" to listOf("Toluca", "Ecatepec", "Naucalpan", "Tlalnepantla"),
-    "Nuevo León" to listOf("Monterrey", "San Nicolás", "San Pedro", "Apodaca"),
-    "Puebla" to listOf("Puebla", "Tehuacán", "Atlixco"),
-    "Querétaro" to listOf("Querétaro", "San Juan del Río", "Corregidora"),
-    "Veracruz" to listOf("Veracruz", "Xalapa", "Coatzacoalcos"),
-    "Yucatán" to listOf("Mérida", "Valladolid", "Tizimín")
-)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun registroAprendiz(navController: NavController){
+fun registroTutor(navController: NavController){
     var passwordNuevamente by remember { mutableStateOf("") }
     var nuevoPassword by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     val isValid = email.contains("@")
-    var visible by remember { mutableStateOf(false) }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
-    //var estado by remember { mutableStateOf("") }
-    //var municipio by remember { mutableStateOf("") }
 
     var estadoResidencia by remember { mutableStateOf("") }
     var municipioResidencia by remember { mutableStateOf("") }
 
-    var expandedEstado by remember { mutableStateOf(false) }
-    var expandedMunicipio by remember { mutableStateOf(false) }
-
     val municipios = estadosConMunicipios[estadoResidencia] ?: emptyList()
 
+    //Variable para el Scrol de la pantalla
     val scrollState = rememberScrollState()
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(180, 180, 180) //230, 230, 235
     ) {
+        //Mantiene todos los componentes adnetro centralizado
         Column(
             modifier = Modifier.fillMaxSize()
                 .verticalScroll(scrollState)
@@ -117,11 +86,13 @@ fun registroAprendiz(navController: NavController){
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Aprendiz")
+                    Text("TUTOR")
                 }
             }
 
             Spacer(Modifier.height(16.dp))
+
+            //Apartado para que los apartados de texto esten centrados
             Card {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -152,7 +123,7 @@ fun registroAprendiz(navController: NavController){
 
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            "Ingresa una contraseña minimo de 6 caracteres:",
+                            "Ingresa una contraseña:",
                             style = MaterialTheme.typography.bodyMedium
                         )
 
@@ -161,7 +132,7 @@ fun registroAprendiz(navController: NavController){
                         OutlinedTextField(
                             value = nuevoPassword,
                             onValueChange = { nuevoPassword = it },
-                            visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth()
 
                         )
@@ -177,7 +148,7 @@ fun registroAprendiz(navController: NavController){
                         OutlinedTextField(
                             value = passwordNuevamente,
                             onValueChange = { passwordNuevamente = it },
-                            visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -319,8 +290,7 @@ fun registroAprendiz(navController: NavController){
                     }
 
                     Spacer(Modifier.height(16.dp))
-
-                    //Boton para registrar el aprendiz
+                    //Boton para registrar tutor
                     var message by remember { mutableStateOf("") }
                     val auth = FirebaseAuth.getInstance()
                     val db = FirebaseFirestore.getInstance()
@@ -332,7 +302,8 @@ fun registroAprendiz(navController: NavController){
                         onClick = {
                             // VALIDACIONES
                             if (email.isBlank() || nuevoPassword.isBlank() || passwordNuevamente.isBlank() ||
-                                nombre.isBlank() || apellido.isBlank() || edad.isBlank() || estadoResidencia.isBlank() || municipioResidencia.isBlank()
+                                nombre.isBlank() || apellido.isBlank() || edad.isBlank() ||
+                                estadoResidencia.isBlank() || municipioResidencia.isBlank()
                             ) {
                                 message = "Completa todos los campos"
                                 return@Button
@@ -349,25 +320,25 @@ fun registroAprendiz(navController: NavController){
 
                                     val userId = authResult.user?.uid ?: return@addOnSuccessListener
 
-                                    // ============================
-                                    // 1️⃣ DATOS PARA "aprendices"
-                                    // ============================
-                                    val aprendizId = db.collection("aprendices").document().id
+                                    // =======================================
+                                    // 1️⃣ CREAR DOCUMENTO EN "instructores"
+                                    // =======================================
+                                    val instructorId = db.collection("instructores").document().id
 
-                                    val aprendizData = hashMapOf(
-                                        "id" to aprendizId,
+                                    val instructorData = hashMapOf(
+                                        "id" to instructorId,
                                         "idUsuario" to userId,
                                         "puntuacion" to 0 //Estara asi hasta que implementemos el sistema de puntuacion
                                     )
 
-                                    db.collection("aprendices")
-                                        .document(aprendizId)
-                                        .set(aprendizData)
+                                    db.collection("instructores")
+                                        .document(instructorId)
+                                        .set(instructorData)
                                         .addOnSuccessListener {
 
-                                            // ============================
-                                            // 2️⃣ DATOS PARA "usuarios"
-                                            // ============================
+                                            // =======================================
+                                            // 2️⃣ GUARDAR DATOS EN "usuarios"
+                                            // =======================================
                                             val usuarioData = hashMapOf(
                                                 "id" to userId,
                                                 "nombre" to nombre,
@@ -376,26 +347,24 @@ fun registroAprendiz(navController: NavController){
                                                 "correoElectronico" to email,
                                                 "municipioResidencia" to municipioResidencia,
                                                 "estadoResidencia" to estadoResidencia,
-                                                "password" to "", // NO guardes contraseñas reales aquí
-                                                "tipoUsuario" to "aprendiz"
+                                                "password" to "", // NO guardar contraseñas reales
+                                                "tipoUsuario" to "tutor"   // ⭐ para diferenciarlos
                                             )
 
                                             db.collection("usuarios")
                                                 .document(userId)
                                                 .set(usuarioData)
                                                 .addOnSuccessListener {
-                                                    message = "Registro completado"
-                                                    navController.navigate("pantalla_inicio")
+                                                    message = "Tutor registrado correctamente"
+                                                    navController.navigate("pantalla_epecialidad_tutor")
                                                 }
                                                 .addOnFailureListener {
                                                     message = "Error al guardar en usuarios"
                                                 }
-
                                         }
                                         .addOnFailureListener {
-                                            message = "Error al guardar en aprendices"
+                                            message = "Error al guardar en instructores"
                                         }
-
                                 }
                                 .addOnFailureListener {
                                     message = "Error al crear usuario"
@@ -403,11 +372,10 @@ fun registroAprendiz(navController: NavController){
                         }
 
                     ) {
-                        Text("Registrar")
+                        Text("Siguiente")
                     }
 
                     Spacer(Modifier.height(16.dp))
-
                     //Botom para regresar
                     Button(
                         modifier = Modifier,
@@ -423,6 +391,5 @@ fun registroAprendiz(navController: NavController){
                 }
             }
         }
-
     }
 }
