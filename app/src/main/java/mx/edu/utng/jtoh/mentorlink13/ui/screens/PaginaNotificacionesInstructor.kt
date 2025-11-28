@@ -68,80 +68,206 @@ fun PaginaNotificacionesInstructor(
     LaunchedEffect(Unit) {
         loading = true
 
-        // Obtener la fecha y hora actual
-        val ahora = Calendar.getInstance()
-
-        // Obtener todas las asesorías donde el usuario actual es el instructor
-        firestore.collection("asesorias")
-            .whereEqualTo("idInstructor", currentUserId)
-            .whereEqualTo("estado", "Aceptada")
+        // Primero obtener el idInstructor
+        firestore.collection("instructores")
+            .whereEqualTo("idUsuario", currentUserId)
             .get()
-            .addOnSuccessListener { asesoriasSnapshot ->
-                val asesoriasList = mutableListOf<Map<String, Any>>()
+            .addOnSuccessListener { instructoresSnapshot ->
+                val instructorDoc = instructoresSnapshot.documents.firstOrNull()
+                val idInstructor = instructorDoc?.id ?: ""
 
-                asesoriasSnapshot.documents.forEach { asesoriaDoc ->
-                    val idAsesoria = asesoriaDoc.id
-                    val fechaStr = asesoriaDoc.getString("fecha") ?: ""
-                    val horaStr = asesoriaDoc.getString("hora") ?: ""
+                if (idInstructor.isEmpty()) {
+                    Log.e("NotificacionesScreen", "No se encontró instructor para este usuario")
+                    loading = false
+                    return@addOnSuccessListener
+                }
 
-                    // Parsear fecha y hora para verificar si ya pasó
-                    try {
-                        val partesFecha = fechaStr.split("/")
-                        val partesHora = horaStr.split(" - ")[0].split(":")
+                // Obtener la fecha y hora actual
+                val ahora = Calendar.getInstance()
 
-                        val fechaAsesoria = Calendar.getInstance().apply {
-                            set(Calendar.DAY_OF_MONTH, partesFecha[0].toInt())
-                            set(Calendar.MONTH, partesFecha[1].toInt() - 1)
-                            set(Calendar.YEAR, partesFecha[2].toInt())
-                            set(Calendar.HOUR_OF_DAY, partesHora[0].toInt())
-                            set(Calendar.MINUTE, partesHora[1].toInt())
+                // AHORA SÍ obtener las asesorías (dentro del success anterior)
+                firestore.collection("asesorias")
+                    .whereEqualTo("idInstructor", idInstructor)
+                    .whereEqualTo("estado", "Finalizada")
+                    .get()
+                    .addOnSuccessListener { asesoriasSnapshot ->
+                        val asesoriasList = mutableListOf<Map<String, Any>>()
+                        var procesadas = 0
+                        val totalAsesorias = asesoriasSnapshot.documents.size
+
+                        if (totalAsesorias == 0) {
+                            loading = false
+                            evaluacionesPendientes = emptyList()
+                            return@addOnSuccessListener
                         }
 
-                        // Verificar si ya pasó la fecha
-                        if (fechaAsesoria.before(ahora)) {
-                            val idAprendiz = asesoriaDoc.getString("idAprendiz") ?: ""
+                        asesoriasSnapshot.documents.forEach { asesoriaDoc ->
+                            val idAsesoria = asesoriaDoc.id
+                            val idAprendiz = asesoriaDoc.getString("idAprendiz") ?: "" // Declarar aquí dentro
 
-                            // Verificar si ya existe una opinión para esta asesoría
-                            firestore.collection("opiniones")
-                                .whereEqualTo("idAsesoria", idAsesoria)
-                                .whereEqualTo("idReceptor", idAprendiz)
-                                .get()
-                                .addOnSuccessListener { opinionesSnapshot ->
-                                    if (opinionesSnapshot.isEmpty) {
-                                        // Obtener nombre del aprendiz
-                                        firestore.collection("usuarios")
-                                            .document(idAprendiz)
-                                            .get()
-                                            .addOnSuccessListener { usuarioDoc ->
+                            if (idAprendiz.isEmpty()) {
+                                Log.e("NotificacionesScreen", "ERROR: idAprendiz vacío en asesoría $idAsesoria")
+                                procesadas++
+                                if (procesadas == totalAsesorias) {
+                                    evaluacionesPendientes = asesoriasList.toList()
+                                    loading = false
+                                }
+                                return@forEach
+                            }
+
+                            val fechaStr = asesoriaDoc.getString("fecha") ?: ""
+                            val horaStr = asesoriaDoc.getString("hora") ?: ""
+
+                            // Parsear fecha y hora para verificar si ya pasó
+                            try {
+                                val partesFecha = fechaStr.split("/")
+                                val partesHora = horaStr.split(" - ")[0].split(":")
+
+                                val fechaAsesoria = Calendar.getInstance().apply {
+                                    set(Calendar.DAY_OF_MONTH, partesFecha[0].toInt())
+                                    set(Calendar.MONTH, partesFecha[1].toInt() - 1)
+                                    set(Calendar.YEAR, partesFecha[2].toInt())
+                                    set(Calendar.HOUR_OF_DAY, partesHora[0].toInt())
+                                    set(Calendar.MINUTE, partesHora[1].toInt())
+                                }
+
+                                // Verificar si ya pasó la fecha
+                                if (fechaAsesoria.before(ahora)) {
+                                    // Verificar si ya existe una opinión para esta asesoría
+                                    firestore.collection("opiniones")
+                                        .whereEqualTo("idAsesoria", idAsesoria)
+                                        .whereEqualTo("idEmisor", idInstructor)
+                                        .whereEqualTo("idReceptor", idAprendiz)
+                                        .get()
+                                        .addOnSuccessListener { opinionesSnapshot ->
+                                            if (opinionesSnapshot.isEmpty) {
+                                                firestore.collection("aprendices")
+                                                    .whereEqualTo("idUsuario", idAprendiz)
+                                                    .get().
+                                                    addOnSuccessListener { aprendicesSnapshot ->
+                                                        val aprendizDoc =
+                                                            aprendicesSnapshot.documents.firstOrNull()
+                                                        val idAprendizReal =
+                                                            aprendizDoc?.id ?: ""
+
+                                                        firestore.collection("usuarios")
+                                                            .document(idAprendiz)
+                                                            .get()
+                                                            .addOnSuccessListener { usuarioDoc ->
+                                                                val nombreAprendiz =
+                                                                    usuarioDoc.getString("nombre")
+                                                                        ?: "Aprendiz"
+                                                                val apellidosAprendiz =
+                                                                    usuarioDoc.getString("apellidos")
+                                                                        ?: ""
+
+                                                                val asesoriaData = mapOf(
+                                                                    "id" to idAsesoria,
+                                                                    "idAprendiz" to idAprendizReal,  // Usar el ID real del documento aprendices
+                                                                    "nombreAprendiz" to "$nombreAprendiz $apellidosAprendiz",
+                                                                    "tema" to (asesoriaDoc.getString(
+                                                                        "tema"
+                                                                    ) ?: ""),
+                                                                    "fecha" to fechaStr,
+                                                                    "hora" to horaStr
+                                                                )
+
+                                                                asesoriasList.add(asesoriaData)
+
+                                                                procesadas++
+                                                                if (procesadas == totalAsesorias) {
+                                                                    evaluacionesPendientes =
+                                                                        asesoriasList.toList()
+                                                                    loading = false
+                                                                }
+                                                            }
+                                                            .addOnFailureListener {
+                                                                procesadas++
+                                                                if (procesadas == totalAsesorias) {
+                                                                    evaluacionesPendientes =
+                                                                        asesoriasList.toList()
+                                                                    loading = false
+                                                                }
+                                                            }
+                                                    }
+                                                    .addOnFailureListener {
+                                                        procesadas++
+                                                        if (procesadas == totalAsesorias) {
+                                                            evaluacionesPendientes = asesoriasList.toList()
+                                                            loading = false
+                                                        }
+                                                    }
+                                                /** Obtener nombre del aprendiz
+                                                firestore.collection("usuarios")
+                                                .document()
+                                                .get()
+                                                .addOnSuccessListener { usuarioDoc ->
                                                 val nombreAprendiz = usuarioDoc.getString("nombre") ?: "Aprendiz"
+                                                val apellidosAprendiz = usuarioDoc.getString("apellidos") ?: ""
 
                                                 val asesoriaData = mapOf(
-                                                    "id" to idAsesoria,
-                                                    "idAprendiz" to idAprendiz,
-                                                    "nombreAprendiz" to nombreAprendiz,
-                                                    "tema" to (asesoriaDoc.getString("tema") ?: ""),
-                                                    "fecha" to fechaStr,
-                                                    "hora" to horaStr
+                                                "id" to idAsesoria,
+                                                "idAprendiz" to idAprendiz,
+                                                "nombreAprendiz" to "$nombreAprendiz $apellidosAprendiz",
+                                                "tema" to (asesoriaDoc.getString("tema") ?: ""),
+                                                "fecha" to fechaStr,
+                                                "hora" to horaStr
                                                 )
 
                                                 asesoriasList.add(asesoriaData)
+
+                                                procesadas++
+                                                if (procesadas == totalAsesorias) {
+                                                evaluacionesPendientes = asesoriasList.toList()
+                                                loading = false
+                                                }
+                                                }
+                                                .addOnFailureListener {
+                                                procesadas++
+                                                if (procesadas == totalAsesorias) {
+                                                evaluacionesPendientes = asesoriasList.toList()
+                                                loading = false
+                                                }
+                                                }*/
+                                            } else {
+                                                procesadas++
+                                                if (procesadas == totalAsesorias) {
+                                                    evaluacionesPendientes = asesoriasList.toList()
+                                                    loading = false
+                                                }
+                                            }
+                                        }
+                                        .addOnFailureListener {
+                                            procesadas++
+                                            if (procesadas == totalAsesorias) {
                                                 evaluacionesPendientes = asesoriasList.toList()
                                                 loading = false
                                             }
+                                        }
+                                } else {
+                                    procesadas++
+                                    if (procesadas == totalAsesorias) {
+                                        evaluacionesPendientes = asesoriasList.toList()
+                                        loading = false
                                     }
                                 }
+                            } catch (e: Exception) {
+                                Log.e("NotificacionesScreen", "Error al parsear fecha: ${e.message}")
+                                procesadas++
+                                if (procesadas == totalAsesorias) {
+                                    evaluacionesPendientes = asesoriasList.toList()
+                                    loading = false
+                                }
+                            }
                         }
-                    } catch (e: Exception) {
-                        Log.e("NotificacionesScreen", "Error al parsear fecha: ${e.message}")
                     }
-                }
-
-                if (asesoriasList.isEmpty()) {
-                    loading = false
-                }
+                    .addOnFailureListener { e ->
+                        Log.e("NotificacionesScreen", "Error al obtener asesorías: ${e.message}")
+                        loading = false
+                    }
             }
             .addOnFailureListener { e ->
-                Log.e("NotificacionesScreen", "Error al obtener asesorías: ${e.message}")
+                Log.e("NotificacionesScreen", "Error al obtener instructor: ${e.message}")
                 loading = false
             }
     }
@@ -219,8 +345,14 @@ fun PaginaNotificacionesInstructor(
                             EvaluacionCard(
                                 asesoria = asesoria,
                                 onEvaluarClick = {
-                                    // Navegar a la pantalla de evaluación
-                                    navController.navigate("calificar_aprendiz/${asesoria["idAprendiz"]}/${asesoria["id"]}")
+                                    val idAprendiz = asesoria["idAprendiz"] as? String ?: ""
+                                    Log.d("EvaluacionCard", "Navegando con idAprendiz: '$idAprendiz'")
+
+                                    if (idAprendiz.isNotEmpty()) {
+                                        navController.navigate("calificar_aprendiz/$idAprendiz/${asesoria["idAsesoria"]}")
+                                    } else {
+                                        Log.e("EvaluacionCard", "ERROR: idAprendiz está vacío, no se puede navegar")
+                                    }
                                 }
                             )
                         }

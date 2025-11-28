@@ -462,40 +462,43 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
 
                 val opinion = reseña["opinion"] as String
                 val puntuacion = reseña["puntuacion"] as Int
-                val nombre = reseña["idEmisor"] as String   // Luego puedes cambiarlo por su nombre real
-
-                var nombreEmisor by remember {mutableStateOf("Cargando...")}
+                var nombreEmisor by remember { mutableStateOf("Cargando...") }
 
                 LaunchedEffect(reseña["idEmisor"]) {
                     val idEmisor = reseña["idEmisor"] as String
                     if (idEmisor.isNotEmpty()) {
-                        cargarNombreAprendiz(idEmisor) {
-                            nombreEmisor = it
-                        }
+                        firestore.collection("usuarios").document(idEmisor)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                nombreEmisor = doc.getString("nombre").orEmpty() + " " +
+                                        doc.getString("apellidos").orEmpty()
+                            }
                     }
                 }
 
                 Card(
                     elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
                     modifier = Modifier
-                        .size(120.dp, 180.dp)
-                        .padding(25.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(255, 255, 255)
+                        containerColor = Color.White
                     )
                 ) {
                     Row {
-                        // Borde lateral izquierdo
                         Box(
                             modifier = Modifier
                                 .width(5.dp)
-                                .fillMaxHeight()
+                                .height(100.dp)
                                 .background(Color(16, 185, 129))
                         )
+
                         Column(
-                            modifier = Modifier.padding(6.dp)
+                            modifier = Modifier.padding(12.dp)
                         ) {
-                            Row {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
                                     nombreEmisor,
                                     fontSize = 14.sp,
@@ -503,27 +506,28 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
                                     fontWeight = FontWeight.ExtraBold
                                 )
 
-                                Spacer(Modifier.width(5.dp))
+                                Spacer(Modifier.width(8.dp))
 
-                                // ⭐ Pintar estrellas dinámicas según puntuación
                                 repeat(puntuacion) {
                                     Icon(
                                         imageVector = Icons.Default.Star,
                                         contentDescription = "Estrella",
                                         tint = Color(232, 191, 54),
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(Modifier.width(1.dp))
                                 }
                             }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            Text(
+                                opinion,
+                                fontSize = 13.sp,
+                                fontFamily = FontFamily.SansSerif,
+                                color = Color.DarkGray
+                            )
                         }
                     }
-                    Spacer(Modifier.height(5.dp))
-                    Text(
-                        opinion,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
                 }
             }
         }

@@ -61,6 +61,8 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
     var instructoresFiltrados by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var temasPorInstructor by remember { mutableStateOf<Map<String, List<String>>>(emptyMap()) }
 
+    var userId by remember { mutableStateOf("") }
+
     // Dialog de confirmación de cerrar sesión
     if (showLogoutDialog) {
         AlertDialog(
@@ -271,7 +273,9 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                             )
                         }
 
-                        IconButton(onClick = { /* Perfil */ }) {
+                        IconButton(onClick = {
+                            navController.navigate("perfil_aprendiz/$userId")
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Perfil",

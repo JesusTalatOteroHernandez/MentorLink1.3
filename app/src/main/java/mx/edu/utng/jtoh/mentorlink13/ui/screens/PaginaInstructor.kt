@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -62,10 +63,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import java.text.SimpleDateFormat
+import java.util.*
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Schedule
 
+fun esFechaYHoraPasada(fecha: String, hora: String): Boolean {
+    try {
+        val formatoFecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val fechaHoraStr = "$fecha $hora"
+        val fechaHoraAsesoria = formatoFecha.parse(fechaHoraStr)
+        val fechaActual = Date()
+
+        return fechaActual.after(fechaHoraAsesoria)
+    } catch (e: Exception) {
+        return false
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaginaInstructor(navController: NavController){
+    val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     val currentUserId = auth.currentUser?.uid
@@ -454,9 +474,11 @@ fun PaginaInstructor(navController: NavController){
             }
         }
     ) { innerPadding ->
-        LazyColumn(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
         {
             // Card de Resumen
             item {
@@ -470,7 +492,7 @@ fun PaginaInstructor(navController: NavController){
                         containerColor = Color(255, 255, 255)
                     ),
                     shape = RoundedCornerShape(20.dp)
-                ){
+                ) {
                     Column {
                         Row(modifier = Modifier.padding(25.dp)) {
                             Icon(
@@ -479,11 +501,13 @@ fun PaginaInstructor(navController: NavController){
                                 tint = Color(13, 176, 123),
                                 modifier = Modifier.size(25.dp)
                             )
-                            Text("Resumen",
+                            Text(
+                                "Resumen",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.SansSerif,
-                                modifier = Modifier.padding(5.dp))
+                                modifier = Modifier.padding(5.dp)
+                            )
                         }
                         Row {
                             Spacer(Modifier.width(10.dp))
@@ -501,9 +525,11 @@ fun PaginaInstructor(navController: NavController){
                                     color = Color(37, 99, 235)
                                 )
                                 Spacer(Modifier.height(10.dp))
-                                Text("Calificación",
+                                Text(
+                                    "Calificación",
                                     fontFamily = FontFamily.SansSerif,
-                                    fontWeight = FontWeight.Light)
+                                    fontWeight = FontWeight.Light
+                                )
                                 Spacer(Modifier.height(6.dp))
                                 Row {
                                     repeat(5) {
@@ -530,21 +556,26 @@ fun PaginaInstructor(navController: NavController){
                                     .padding(bottom = 20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("$asesoriasCompletadas",
+                                Text(
+                                    "$asesoriasCompletadas",
                                     fontFamily = FontFamily.SansSerif,
                                     fontSize = 25.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color(16, 185, 129)
                                 )
                                 Spacer(Modifier.height(10.dp))
-                                Text("Asesorías",
+                                Text(
+                                    "Asesorías",
                                     fontFamily = FontFamily.SansSerif,
-                                    fontWeight = FontWeight.Light)
+                                    fontWeight = FontWeight.Light
+                                )
                                 Spacer(Modifier.height(6.dp))
-                                Text("completadas",
+                                Text(
+                                    "completadas",
                                     fontFamily = FontFamily.SansSerif,
                                     fontWeight = FontWeight.ExtraLight,
-                                    fontSize = 12.sp)
+                                    fontSize = 12.sp
+                                )
                             }
                             Spacer(Modifier.width(10.dp))
                         }
@@ -563,11 +594,13 @@ fun PaginaInstructor(navController: NavController){
                         modifier = Modifier.size(25.dp)
                     )
                     Spacer(Modifier.width(5.dp))
-                    Text("Solicitudes Pendientes",
+                    Text(
+                        "Solicitudes Pendientes",
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
-                        modifier = Modifier.padding(4.dp))
+                        modifier = Modifier.padding(4.dp)
+                    )
                 }
             }
 
@@ -583,7 +616,7 @@ fun PaginaInstructor(navController: NavController){
                         containerColor = Color(255, 255, 255)
                     ),
                     shape = RoundedCornerShape(20.dp)
-                ){
+                ) {
                     Column(modifier = Modifier.padding(15.dp)) {
                         Row {
                             Icon(
@@ -606,10 +639,12 @@ fun PaginaInstructor(navController: NavController){
 
                         Spacer(Modifier.height(10.dp))
 
-                        Text("Tema solicitado:",
+                        Text(
+                            "Tema solicitado:",
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.ExtraLight,
-                            fontSize = 11.sp)
+                            fontSize = 11.sp
+                        )
 
                         Spacer(Modifier.height(5.dp))
 
@@ -632,9 +667,10 @@ fun PaginaInstructor(navController: NavController){
                                 containerColor = Color(249, 250, 251)
                             ),
                             shape = RoundedCornerShape(5.dp)
-                        ){
+                        ) {
                             Text(
-                                asesoria["adicional"] as? String ?: "Sin especificaciones adicionales",
+                                asesoria["adicional"] as? String
+                                    ?: "Sin especificaciones adicionales",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
                                 modifier = Modifier.padding(10.dp),
@@ -645,10 +681,12 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(10.dp))
 
                         Row {
-                            Text("Fecha:",
+                            Text(
+                                "Fecha:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["fecha"] as? String ?: "",
@@ -661,10 +699,12 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(5.dp))
 
                         Row {
-                            Text("Hora:",
+                            Text(
+                                "Hora:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["hora"] as? String ?: "",
@@ -677,10 +717,12 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(5.dp))
 
                         Row {
-                            Text("Modalidad:",
+                            Text(
+                                "Modalidad:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["modalidad"] as? String ?: "",
@@ -688,6 +730,37 @@ fun PaginaInstructor(navController: NavController){
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 color = Color(37, 99, 235)
+                            )
+                        }
+
+                        Spacer(Modifier.height(15.dp))
+
+                        // BOTÓN VER PERFIL DEL APRENDIZ
+                        Button(
+                            onClick = {
+                                val idAprendiz = asesoria["idAprendiz"] as? String ?: ""
+                                if (idAprendiz.isNotEmpty()) {
+                                    navController.navigate("perfil_aprendiz/$idAprendiz")
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(45.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(37, 99, 235)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Visibility,
+                                contentDescription = "Ver perfil",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Ver Perfil del Aprendiz",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -702,7 +775,8 @@ fun PaginaInstructor(navController: NavController){
                                     .size(60.dp)
                                     .clickable {
                                         selectedAsesoria = asesoria
-                                        selectedAprendizNombre = asesoria["nombreAprendiz"] as? String ?: ""
+                                        selectedAprendizNombre =
+                                            asesoria["nombreAprendiz"] as? String ?: ""
 
                                         // Actualizar estado en Firebase
                                         val asesoriaId = asesoria["asesoriaId"] as? String ?: ""
@@ -711,12 +785,19 @@ fun PaginaInstructor(navController: NavController){
                                             .addOnSuccessListener {
                                                 // ✅ INCREMENTAR contador en la colección instructores
                                                 if (instructorId.isNotEmpty()) {
-                                                    db.collection("instructores").document(instructorId)
+                                                    db.collection("instructores")
+                                                        .document(instructorId)
                                                         .get()
                                                         .addOnSuccessListener { doc ->
-                                                            val asesoriaActuales = doc.getLong("asesoriasCompletadas")?.toInt() ?: 0
-                                                            db.collection("instructores").document(instructorId)
-                                                                .update("asesoriasCompletadas", asesoriaActuales + 1)
+                                                            val asesoriaActuales =
+                                                                doc.getLong("asesoriasCompletadas")
+                                                                    ?.toInt() ?: 0
+                                                            db.collection("instructores")
+                                                                .document(instructorId)
+                                                                .update(
+                                                                    "asesoriasCompletadas",
+                                                                    asesoriaActuales + 1
+                                                                )
                                                                 .addOnSuccessListener {
                                                                     // Actualizar el estado local
                                                                     asesoriasCompletadas += 1
@@ -749,7 +830,8 @@ fun PaginaInstructor(navController: NavController){
                                     .size(60.dp)
                                     .clickable {
                                         selectedAsesoria = asesoria
-                                        selectedAprendizNombre = asesoria["nombreAprendiz"] as? String ?: ""
+                                        selectedAprendizNombre =
+                                            asesoria["nombreAprendiz"] as? String ?: ""
 
                                         // Eliminar o actualizar estado en Firebase
                                         val asesoriaId = asesoria["asesoriaId"] as? String ?: ""
@@ -792,16 +874,23 @@ fun PaginaInstructor(navController: NavController){
                         modifier = Modifier.size(25.dp)
                     )
                     Spacer(Modifier.width(5.dp))
-                    Text("Asesorías Pendientes",
+                    Text(
+                        "Asesorías Pendientes",
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
-                        modifier = Modifier.padding(4.dp))
+                        modifier = Modifier.padding(4.dp)
+                    )
                 }
             }
 
-            // Cards de Asesorías Pendientes
+            // Cards de Asesorías Pendientes (Aceptadas)
             items(asesoriasPendientes) { asesoria ->
+                val fechaPasada = esFechaYHoraPasada(
+                    asesoria["fecha"] as? String ?: "",
+                    asesoria["hora"] as? String ?: ""
+                )
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -812,7 +901,7 @@ fun PaginaInstructor(navController: NavController){
                         containerColor = Color(255, 255, 255)
                     ),
                     shape = RoundedCornerShape(20.dp)
-                ){
+                ) {
                     Column(modifier = Modifier.padding(15.dp)) {
                         Text(
                             "Asesoría con:",
@@ -833,10 +922,12 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(10.dp))
 
                         Row {
-                            Text("Fecha:",
+                            Text(
+                                "Fecha:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["fecha"] as? String ?: "",
@@ -849,10 +940,12 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(5.dp))
 
                         Row {
-                            Text("Hora:",
+                            Text(
+                                "Hora:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["hora"] as? String ?: "",
@@ -865,27 +958,32 @@ fun PaginaInstructor(navController: NavController){
                         Spacer(Modifier.height(5.dp))
 
                         Row {
-                            Text("Modalidad:",
+                            Text(
+                                "Modalidad:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["modalidad"] as? String ?: "",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = if ((asesoria["modalidad"] as? String ?: "") == "Virtual") Color(139, 92, 246) else Color(37, 99, 235)
+                                color = if ((asesoria["modalidad"] as? String ?: "") == "Virtual")
+                                    Color(139, 92, 246) else Color(37, 99, 235)
                             )
                         }
 
                         Spacer(Modifier.height(5.dp))
 
                         Row {
-                            Text("Tema:",
+                            Text(
+                                "Tema:",
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp)
+                                fontSize = 12.sp
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 asesoria["tema"] as? String ?: "",
@@ -923,9 +1021,113 @@ fun PaginaInstructor(navController: NavController){
                                 )
                             }
                         }
+
+                        Spacer(Modifier.height(15.dp))
+
+                        // ✅ BOTÓN PARA FINALIZAR (solo aparece si la fecha ya pasó)
+                        if (fechaPasada) {
+                            Button(
+                                onClick = {
+                                    val asesoriaId = asesoria["asesoriaId"] as? String ?: ""
+                                    if (asesoriaId.isNotEmpty()) {
+                                        // Actualizar estado a Finalizada
+                                        db.collection("asesorias").document(asesoriaId)
+                                            .update("estado", "Finalizada")
+                                            .addOnSuccessListener {
+                                                // Actualizar contador en instructores
+                                                if (instructorId.isNotEmpty()) {
+                                                    db.collection("instructores")
+                                                        .document(instructorId)
+                                                        .get()
+                                                        .addOnSuccessListener { doc ->
+                                                            val asesoriaActuales =
+                                                                doc.getLong("asesoriasCompletadas")
+                                                                    ?.toInt() ?: 0
+                                                            db.collection("instructores")
+                                                                .document(instructorId)
+                                                                .update(
+                                                                    "asesoriasCompletadas",
+                                                                    asesoriaActuales + 1
+                                                                )
+                                                                .addOnSuccessListener {
+                                                                    // Actualizar estado local
+                                                                    asesoriasCompletadas += 1
+
+                                                                    // Remover de la lista de pendientes
+                                                                    asesoriasPendientes =
+                                                                        asesoriasPendientes.filter {
+                                                                            it["asesoriaId"] != asesoriaId
+                                                                        }
+
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "Asesoría finalizada exitosamente",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                        }
+                                                }
+                                            }
+                                            .addOnFailureListener {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error al finalizar asesoría",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(16, 185, 129)
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Finalizar",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Finalizar Asesoría",
+                                    fontFamily = FontFamily.SansSerif,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            // Mostrar indicador de que aún no es tiempo
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(254, 243, 199)
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Schedule,
+                                        contentDescription = "Pendiente",
+                                        tint = Color(217, 119, 6),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "Asesoría programada - Podrás finalizarla después de la fecha",
+                                        fontFamily = FontFamily.SansSerif,
+                                        fontSize = 11.sp,
+                                        color = Color(120, 53, 15)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+
     }
 }

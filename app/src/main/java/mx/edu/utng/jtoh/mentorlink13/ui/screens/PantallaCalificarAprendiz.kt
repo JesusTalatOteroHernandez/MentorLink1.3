@@ -52,8 +52,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun PantallaCalificarAprendiz(
     navController: NavController,
-    idAprendiz: String, // ID del aprendiz a calificar
-    idAsesoria: String? = null // ID de la asesoría (opcional)
+    idAprendiz: String,
+    idAsesoria: String
 ) {
     var experiencia by remember { mutableStateOf("") }
     var isFocused by remember { mutableStateOf(false) }
@@ -165,6 +165,7 @@ fun PantallaCalificarAprendiz(
                                         val opinionId = db.collection("opiniones").document().id
 
                                         val opinionData = hashMapOf<String, Any>(
+                                            "idAsesoria" to idAsesoria,
                                             "idEmisor" to currentUserId,
                                             "idReceptor" to idUsuarioAprendiz,
                                             "opinion" to experiencia,

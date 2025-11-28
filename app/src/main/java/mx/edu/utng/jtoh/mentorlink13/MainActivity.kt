@@ -19,10 +19,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.firebase.FirebaseApp
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.EditarPerfilAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.EspecialidadTutor
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaCategoria
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaInstructor
@@ -31,6 +34,8 @@ import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaNotificacionesInstructor
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PaginaPrincipalAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PantallaCalificarInstructor
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilAprendiz
+import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilAprendizVer
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructor
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructorEditable
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.SolicitarAsesoria
@@ -101,10 +106,27 @@ class MainActivity : ComponentActivity() {
                         PaginaNotificacionesInstructor(navController)
                     }
 
-                    composable("calificar_aprendiz/{idAprendiz/{idAsesoria}") { backStackEntry ->
+                    /*composable("calificar_aprendiz/{idAprendiz/{idAsesoria}") { backStackEntry ->
                         val idAprendiz = backStackEntry.arguments?.getString("idAprendiz") ?: ""
                         val idAsesoria = backStackEntry.arguments?.getString("idAsesoria") ?: ""
                         PantallaCalificarAprendiz(navController,idAprendiz, idAsesoria)
+                    }*/
+
+                    composable(
+                        route = "calificar_aprendiz/{idAprendiz}/{idAsesoria}",
+                        arguments = listOf(
+                            navArgument("idAprendiz") { type = NavType.StringType },
+                            navArgument("idAsesoria") { type = NavType.StringType }
+                        )
+                    ) { backStackEntry ->
+                        val idAprendiz = backStackEntry.arguments?.getString("idAprendiz") ?: ""
+                        val idAsesoria = backStackEntry.arguments?.getString("idAsesoria") ?: ""
+
+                        PantallaCalificarAprendiz(
+                            navController = navController,
+                            idAprendiz = idAprendiz,
+                            idAsesoria = idAsesoria
+                        )
                     }
 
                     composable("calificar_instructor/{idInstructor}") { backStackEntry ->
@@ -115,6 +137,21 @@ class MainActivity : ComponentActivity() {
                     composable("pantalla_editable_de_instructor/{idInstructor}") { backStackEntry ->
                         val idInstructor = backStackEntry.arguments?.getString("idInstructor") ?: ""
                         PerfilInstructorEditable(navController)
+                    }
+
+                    composable("perfil_aprendiz/{idUsuario}") { backStackEntry ->
+                        val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+                        PerfilAprendiz(idUsuario, navController)
+                    }
+
+                    composable("editarPerfilAprendiz/{idUsuario}") { backStackEntry ->
+                        val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+                        EditarPerfilAprendiz(idUsuario, navController)
+                    }
+
+                    composable("perfil_aprendiz_ver/{idUsuario}") { backStackEntry ->
+                        val idUsuario = backStackEntry.arguments?.getString("idUsuario") ?: ""
+                        PerfilAprendizVer(idUsuario, navController)
                     }
 
                 }
