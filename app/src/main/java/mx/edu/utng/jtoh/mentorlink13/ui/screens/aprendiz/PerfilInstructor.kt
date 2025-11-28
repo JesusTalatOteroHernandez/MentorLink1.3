@@ -78,6 +78,7 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
                             "nombre" to usuarioDoc.getString("nombre").orEmpty(),
                             "apellidos" to usuarioDoc.getString("apellidos").orEmpty(),
                             "modalidad" to instDoc.getString("modalidad").orEmpty(),
+                            "disponibilidad" to instDoc.getString("disponibilidad").orEmpty(),
                             "estadoResidencia" to usuarioDoc.getString("estadoResidencia").orEmpty(),
                             "municipioResidencia" to usuarioDoc.getString("municipioResidencia").orEmpty(),
                             "cobro" to (instDoc.getLong("cobro")?.toInt() ?: 0),
@@ -349,7 +350,7 @@ fun PerfilInstructor(idInstructor: String, navController: NavController) {
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.ExtraLight)
                             Spacer(Modifier.height(5.dp))
-                            Text("Lun-Vie 6-9pm",
+                            Text("${datosInstructor?.get("disponibilidad")}",
                                 fontSize = 14.sp,
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Bold)

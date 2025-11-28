@@ -97,10 +97,9 @@ fun PaginaInstructor(navController: NavController){
     var showMenuCerrarSesion by remember { mutableStateOf(false) }
     var showDialogCerrarSesion by remember { mutableStateOf(false) }
     var showDialogSalir by remember { mutableStateOf(false) }
+    var refreshTrigger by remember { mutableStateOf(0) }
 
-
-
-    LaunchedEffect(currentUserId) {
+    LaunchedEffect(refreshTrigger) {
         if (currentUserId != null) {
             // 1. Obtener datos del instructor
             db.collection("usuarios").document(currentUserId).get()
@@ -792,8 +791,25 @@ fun PaginaInstructor(navController: NavController){
                                                                     // Actualizar el estado local
                                                                     asesoriasCompletadas += 1
                                                                     showAceptarDialog = true
+
+                                                                    solicitudesPendientes = solicitudesPendientes.filter {
+                                                                        it["asesoriaId"] != asesoriaId
+                                                                    }
+
+                                                                    val asesoriaActualizada = asesoria.toMutableMap()
+                                                                    asesoriaActualizada["estado"] = "Aceptada"
+                                                                    asesoriasPendientes = asesoriasPendientes + asesoriaActualizada
                                                                 }
                                                         }
+                                                } else {
+                                                    showAceptarDialog = true
+                                                    solicitudesPendientes = solicitudesPendientes.filter {
+                                                        it["asesoriaId"] != asesoriaId
+                                                    }
+
+                                                    val asesoriaActualizada = asesoria.toMutableMap()
+                                                    asesoriaActualizada["estado"] = "Aceptada"
+                                                    asesoriasPendientes = asesoriasPendientes + asesoriaActualizada
                                                 }
                                             }
                                     },
@@ -829,6 +845,10 @@ fun PaginaInstructor(navController: NavController){
                                             .update("estado", "Rechazada")
                                             .addOnSuccessListener {
                                                 showRechazarDialog = true
+
+                                                solicitudesPendientes = solicitudesPendientes.filter {
+                                                    it["asesoriaId"] != asesoriaId
+                                                }
                                             }
                                     },
                                 colors = CardDefaults.cardColors(

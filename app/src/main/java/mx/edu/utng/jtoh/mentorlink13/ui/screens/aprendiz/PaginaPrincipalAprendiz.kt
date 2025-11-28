@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -236,7 +238,7 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-                //.padding(top = 20.dp),
+            //.padding(top = 20.dp),
             elevation = CardDefaults.cardElevation(8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(37, 99, 235)
@@ -355,16 +357,19 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
 
         // Resultados de búsqueda
         if (searchText.isNotEmpty()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                instructoresFiltrados.forEach { inst ->
-
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(instructoresFiltrados) { inst ->
                     Card(
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(vertical = 10.dp)
                             .clickable {
                                 navController.navigate("perfil_instructor/${inst["idInstructor"].toString()}")
                             },
@@ -372,7 +377,6 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                             containerColor = Color(255, 255, 255)
                         )
                     ) {
-
                         Row {
                             Icon(
                                 imageVector = Icons.Default.Person,
@@ -418,7 +422,6 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                                 val estrellasVacias =
                                     if (tieneMedia) 4 - estrellasLlenas else 5 - estrellasLlenas
 
-
                                 Row {
                                     repeat(estrellasLlenas) {
                                         Icon(
@@ -430,7 +433,6 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                                         Spacer(Modifier.width(1.dp))
                                     }
 
-                                    // Medias estrellas
                                     if (tieneMedia) {
                                         Icon(
                                             imageVector = Icons.Default.StarHalf,
@@ -441,7 +443,6 @@ fun PaginaPrincipalAprendiz(navController: NavController) {
                                         Spacer(Modifier.width(1.dp))
                                     }
 
-                                    //Estrellas vacías
                                     repeat(estrellasVacias) {
                                         Icon(
                                             imageVector = Icons.Default.Star,

@@ -65,149 +65,264 @@ fun PaginaNotificacionesAprendiz(
     val auth: FirebaseAuth = Firebase.auth
     var evaluacionesPendientes by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var asesoriasProximas by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var asesoriasRechazadas by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
-    val currentUserId = auth.currentUser?.uid ?: "" // Aprendiz logueado
+    val currentUserId = auth.currentUser?.uid ?: ""
 
     LaunchedEffect(Unit) {
         loading = true
         Log.d("Notificaciones", "Iniciando carga para usuario: $currentUserId")
 
-        // Obtener la fecha y hora actual
         val ahora = Calendar.getInstance()
+        val hace30Dias = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -30)
+        }
 
-        // Obtener todas las asesorías donde el usuario actual es el aprendiz
-        firestore.collection("asesorias")
-            .whereEqualTo("idAprendiz", currentUserId)
-            .whereEqualTo("estado", "Finalizada")
+        // Primero obtener todas las opiniones del usuario
+        firestore.collection("opiniones")
+            .whereEqualTo("idEmisor", currentUserId)
             .get()
-            .addOnSuccessListener { asesoriasSnapshot ->
-                Log.d("Notificaciones", "Asesorías aceptadas encontradas: ${asesoriasSnapshot.size()}")
+            .addOnSuccessListener { opinionesSnapshot ->
+                val asesoriasEvaluadas = opinionesSnapshot.documents
+                    .mapNotNull { doc ->
+                        val idAsesoria = doc.getString("idAsesoria")
+                        Log.d("Notificaciones", "Opinión encontrada - idAsesoria: $idAsesoria, idReceptor: ${doc.getString("idReceptor")}")
+                        idAsesoria
+                    }
+                    .toSet()
 
-                if (asesoriasSnapshot.isEmpty) {
-                    evaluacionesPendientes = emptyList()
-                    asesoriasProximas = emptyList()
-                    loading = false
-                    return@addOnSuccessListener
-                }
+                Log.d("Notificaciones", "Total opiniones del usuario: ${opinionesSnapshot.size()}")
+                Log.d("Notificaciones", "IDs de asesorías evaluadas: $asesoriasEvaluadas")
 
-                val evaluacionesList = mutableListOf<Map<String, Any>>()
-                val proximasList = mutableListOf<Map<String, Any>>()
-                var asesoriasRestantes = asesoriasSnapshot.size()
+                // Ahora obtener asesorías finalizadas
+                firestore.collection("asesorias")
+                    .whereEqualTo("idAprendiz", currentUserId)
+                    .whereEqualTo("estado", "Finalizada")
+                    .get()
+                    .addOnSuccessListener { asesoriasSnapshot ->
+                        Log.d("Notificaciones", "Asesorías finalizadas encontradas: ${asesoriasSnapshot.size()}")
 
-                asesoriasSnapshot.documents.forEach { asesoriaDoc ->
-                    val idAsesoria = asesoriaDoc.id
-                    val fechaStr = asesoriaDoc.getString("fecha") ?: ""
-                    val horaStr = asesoriaDoc.getString("hora") ?: ""
-                    val idInstructor = asesoriaDoc.getString("idInstructor") ?: ""
+                        val evaluacionesList = mutableListOf<Map<String, Any>>()
+                        val proximasList = mutableListOf<Map<String, Any>>()
+                        var asesoriasRestantes = asesoriasSnapshot.size()
 
-                    // Parsear fecha y hora
-                    try {
-                        val partesFecha = fechaStr.split("/")
-                        val partesHora = horaStr.split(" - ")[0].split(":")
+                        if (asesoriasSnapshot.isEmpty) {
+                            asesoriasRestantes = 0
+                        }
 
-                        if (partesFecha.size != 3 || partesHora.size != 2) {
-                            Log.e("Notificaciones", "Formato de fecha/hora inválido: $fechaStr / $horaStr")
-                            asesoriasRestantes--
-                            if (asesoriasRestantes == 0) {
-                                evaluacionesPendientes = evaluacionesList.toList()
-                                asesoriasProximas = proximasList.toList()
-                                loading = false
+                        asesoriasSnapshot.documents.forEach { asesoriaDoc ->
+                            val idAsesoria = asesoriaDoc.id
+                            val fechaStr = asesoriaDoc.getString("fecha") ?: ""
+                            val horaStr = asesoriaDoc.getString("hora") ?: ""
+                            val idInstructor = asesoriaDoc.getString("idInstructor") ?: ""
+
+                            Log.d("Notificaciones", "Procesando asesoría: $idAsesoria")
+                            Log.d("Notificaciones", "¿Ya evaluada?: ${asesoriasEvaluadas.contains(idAsesoria)}")
+
+                            // Verificar si ya fue evaluada
+                            if (asesoriasEvaluadas.contains(idAsesoria)) {
+                                Log.d("Notificaciones", "Asesoría $idAsesoria YA EVALUADA, omitiendo...")
+                                asesoriasRestantes--
+                                if (asesoriasRestantes == 0) {
+                                    evaluacionesPendientes = evaluacionesList.toList()
+                                    asesoriasProximas = proximasList.toList()
+                                    Log.d("Notificaciones", "Finalizando - Evaluaciones: ${evaluacionesList.size}, Próximas: ${proximasList.size}")
+                                }
+                                return@forEach
                             }
-                            return@forEach
-                        }
 
-                        val fechaAsesoria = Calendar.getInstance().apply {
-                            set(Calendar.DAY_OF_MONTH, partesFecha[0].toInt())
-                            set(Calendar.MONTH, partesFecha[1].toInt() - 1)
-                            set(Calendar.YEAR, partesFecha[2].toInt())
-                            set(Calendar.HOUR_OF_DAY, partesHora[0].toInt())
-                            set(Calendar.MINUTE, partesHora[1].toInt())
-                            set(Calendar.SECOND, 0)
-                        }
+                            // Parsear fecha y hora
+                            try {
+                                val partesFecha = fechaStr.split("/")
+                                val partesHora = horaStr.split(" - ")
 
-                        // Verificar si ya pasó o es próxima
-                        if (fechaAsesoria.before(ahora)) {
-                            // ASESORÍA YA PASÓ - Verificar si necesita evaluación
-                            Log.d("Notificaciones", "Asesoría $idAsesoria ya pasó")
+                                if (partesHora.size < 2) {
+                                    Log.e("Notificaciones", "Formato de hora inválido: $horaStr")
+                                    asesoriasRestantes--
+                                    return@forEach
+                                }
 
-                            firestore.collection("opiniones")
-                                .whereEqualTo("idAsesoria", idAsesoria)
-                                .whereEqualTo("idReceptor", idInstructor)
-                                .whereEqualTo("idEmisor", currentUserId)
-                                .get()
-                                .addOnSuccessListener { opinionesSnapshot ->
-                                    if (opinionesSnapshot.isEmpty) {
-                                        // Obtener datos del instructor para evaluación
-                                        obtenerDatosInstructor(firestore, idInstructor) { nombreInstructor ->
-                                            val asesoriaData = mapOf(
-                                                "id" to idAsesoria,
-                                                "idInstructor" to idInstructor,
-                                                "nombreInstructor" to nombreInstructor,
-                                                "tema" to (asesoriaDoc.getString("tema") ?: "Sin tema"),
-                                                "fecha" to fechaStr,
-                                                "hora" to horaStr
-                                            )
-                                            evaluacionesList.add(asesoriaData)
+                                val partesHoraFin = partesHora[1].trim().split(":")
 
-                                            asesoriasRestantes--
-                                            if (asesoriasRestantes == 0) {
-                                                evaluacionesPendientes = evaluacionesList.toList()
-                                                asesoriasProximas = proximasList.toList()
-                                                loading = false
-                                            }
-                                        }
-                                    } else {
+                                if (partesFecha.size != 3 || partesHoraFin.size != 2) {
+                                    Log.e("Notificaciones", "Formato de fecha/hora inválido: $fechaStr / $horaStr")
+                                    asesoriasRestantes--
+                                    return@forEach
+                                }
+
+                                val fechaAsesoria = Calendar.getInstance().apply {
+                                    set(Calendar.DAY_OF_MONTH, partesFecha[0].toInt())
+                                    set(Calendar.MONTH, partesFecha[1].toInt() - 1)
+                                    set(Calendar.YEAR, partesFecha[2].toInt())
+                                    set(Calendar.HOUR_OF_DAY, partesHoraFin[0].toInt())
+                                    set(Calendar.MINUTE, partesHoraFin[1].toInt())
+                                    set(Calendar.SECOND, 0)
+                                }
+
+                                Log.d("Notificaciones", "Fecha asesoría: ${fechaAsesoria.time}, Ahora: ${ahora.time}")
+
+                                if (fechaAsesoria.before(ahora)) {
+                                    // ASESORÍA YA PASÓ - Pendiente de evaluación
+                                    Log.d("Notificaciones", "Asesoría $idAsesoria PENDIENTE DE EVALUACIÓN")
+
+                                    obtenerDatosInstructor(firestore, idInstructor) { nombreInstructor ->
+                                        val asesoriaData = mapOf(
+                                            "id" to idAsesoria,
+                                            "idInstructor" to idInstructor,
+                                            "nombreInstructor" to nombreInstructor,
+                                            "tema" to (asesoriaDoc.getString("tema") ?: "Sin tema"),
+                                            "fecha" to fechaStr,
+                                            "hora" to horaStr
+                                        )
+                                        evaluacionesList.add(asesoriaData)
+                                        Log.d("Notificaciones", "Agregada a evaluaciones pendientes: $idAsesoria")
+
                                         asesoriasRestantes--
                                         if (asesoriasRestantes == 0) {
                                             evaluacionesPendientes = evaluacionesList.toList()
                                             asesoriasProximas = proximasList.toList()
+                                            Log.d("Notificaciones", "FINAL - Evaluaciones: ${evaluacionesList.size}, Próximas: ${proximasList.size}")
+                                        }
+                                    }
+                                } else {
+                                    // ASESORÍA PRÓXIMA
+                                    Log.d("Notificaciones", "Asesoría $idAsesoria es PRÓXIMA")
+
+                                    obtenerDatosInstructor(firestore, idInstructor) { nombreInstructor ->
+                                        val asesoriaData = mapOf(
+                                            "id" to idAsesoria,
+                                            "idInstructor" to idInstructor,
+                                            "nombreInstructor" to nombreInstructor,
+                                            "tema" to (asesoriaDoc.getString("tema") ?: "Sin tema"),
+                                            "fecha" to fechaStr,
+                                            "hora" to horaStr,
+                                            "modalidad" to (asesoriaDoc.getString("modalidad") ?: "Virtual"),
+                                            "fechaAsesoria" to fechaAsesoria.timeInMillis
+                                        )
+                                        proximasList.add(asesoriaData)
+
+                                        asesoriasRestantes--
+                                        if (asesoriasRestantes == 0) {
+                                            val proximasOrdenadas = proximasList.sortedBy {
+                                                it["fechaAsesoria"] as Long
+                                            }
+
+                                            evaluacionesPendientes = evaluacionesList.toList()
+                                            asesoriasProximas = proximasOrdenadas
+                                            Log.d("Notificaciones", "FINAL - Evaluaciones: ${evaluacionesList.size}, Próximas: ${proximasOrdenadas.size}")
+                                        }
+                                    }
+                                }
+
+                            } catch (e: Exception) {
+                                Log.e("Notificaciones", "Error al parsear fecha: ${e.message}", e)
+                                asesoriasRestantes--
+                            }
+                        }
+
+                        // Obtener asesorías rechazadas de los últimos 30 días
+                        firestore.collection("asesorias")
+                            .whereEqualTo("idAprendiz", currentUserId)
+                            .whereEqualTo("estado", "Rechazada")
+                            .get()
+                            .addOnSuccessListener { rechazadasSnapshot ->
+                                Log.d("Notificaciones", "Asesorías rechazadas encontradas: ${rechazadasSnapshot.size()}")
+
+                                val rechazadasList = mutableListOf<Map<String, Any>>()
+                                var rechazadasRestantes = rechazadasSnapshot.size()
+
+                                if (rechazadasSnapshot.isEmpty) {
+                                    asesoriasRechazadas = emptyList()
+                                    loading = false
+                                    return@addOnSuccessListener
+                                }
+
+                                rechazadasSnapshot.documents.forEach { asesoriaDoc ->
+                                    val idAsesoria = asesoriaDoc.id
+                                    val fechaStr = asesoriaDoc.getString("fecha") ?: ""
+                                    val horaStr = asesoriaDoc.getString("hora") ?: ""
+                                    val idInstructor = asesoriaDoc.getString("idInstructor") ?: ""
+
+                                    try {
+                                        val partesFecha = fechaStr.split("/")
+
+                                        if (partesFecha.size != 3) {
+                                            rechazadasRestantes--
+                                            if (rechazadasRestantes == 0) {
+                                                asesoriasRechazadas = rechazadasList.sortedByDescending {
+                                                    it["fechaAsesoria"] as Long
+                                                }
+                                                loading = false
+                                            }
+                                            return@forEach
+                                        }
+
+                                        val fechaAsesoria = Calendar.getInstance().apply {
+                                            set(Calendar.DAY_OF_MONTH, partesFecha[0].toInt())
+                                            set(Calendar.MONTH, partesFecha[1].toInt() - 1)
+                                            set(Calendar.YEAR, partesFecha[2].toInt())
+                                            set(Calendar.HOUR_OF_DAY, 0)
+                                            set(Calendar.MINUTE, 0)
+                                            set(Calendar.SECOND, 0)
+                                        }
+
+                                        // Filtrar solo las de los últimos 30 días
+                                        if (fechaAsesoria.after(hace30Dias)) {
+                                            obtenerDatosInstructor(firestore, idInstructor) { nombreInstructor ->
+                                                val asesoriaData = mapOf(
+                                                    "id" to idAsesoria,
+                                                    "idInstructor" to idInstructor,
+                                                    "nombreInstructor" to nombreInstructor,
+                                                    "tema" to (asesoriaDoc.getString("tema") ?: "Sin tema"),
+                                                    "fecha" to fechaStr,
+                                                    "hora" to horaStr,
+                                                    "fechaAsesoria" to fechaAsesoria.timeInMillis
+                                                )
+                                                rechazadasList.add(asesoriaData)
+
+                                                rechazadasRestantes--
+                                                if (rechazadasRestantes == 0) {
+                                                    asesoriasRechazadas = rechazadasList.sortedByDescending {
+                                                        it["fechaAsesoria"] as Long
+                                                    }
+                                                    loading = false
+                                                }
+                                            }
+                                        } else {
+                                            rechazadasRestantes--
+                                            if (rechazadasRestantes == 0) {
+                                                asesoriasRechazadas = rechazadasList.sortedByDescending {
+                                                    it["fechaAsesoria"] as Long
+                                                }
+                                                loading = false
+                                            }
+                                        }
+
+                                    } catch (e: Exception) {
+                                        Log.e("Notificaciones", "Error al parsear fecha rechazada: ${e.message}", e)
+                                        rechazadasRestantes--
+                                        if (rechazadasRestantes == 0) {
+                                            asesoriasRechazadas = rechazadasList.sortedByDescending {
+                                                it["fechaAsesoria"] as Long
+                                            }
                                             loading = false
                                         }
                                     }
                                 }
-                        } else {
-                            // ASESORÍA PRÓXIMA
-                            Log.d("Notificaciones", "Asesoría $idAsesoria es próxima")
-
-                            obtenerDatosInstructor(firestore, idInstructor) { nombreInstructor ->
-                                val asesoriaData = mapOf(
-                                    "id" to idAsesoria,
-                                    "idInstructor" to idInstructor,
-                                    "nombreInstructor" to nombreInstructor,
-                                    "tema" to (asesoriaDoc.getString("tema") ?: "Sin tema"),
-                                    "fecha" to fechaStr,
-                                    "hora" to horaStr,
-                                    "modalidad" to (asesoriaDoc.getString("modalidad") ?: "Virtual"),
-                                    "fechaAsesoria" to fechaAsesoria.timeInMillis
-                                )
-                                proximasList.add(asesoriaData)
-
-                                asesoriasRestantes--
-                                if (asesoriasRestantes == 0) {
-                                    // Ordenar asesorías próximas por fecha (más cercanas primero)
-                                    val proximasOrdenadas = proximasList.sortedBy {
-                                        it["fechaAsesoria"] as Long
-                                    }
-
-                                    evaluacionesPendientes = evaluacionesList.toList()
-                                    asesoriasProximas = proximasOrdenadas
-                                    loading = false
-                                }
                             }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("Notificaciones", "Error al parsear fecha: ${e.message}")
-                        asesoriasRestantes--
-                        if (asesoriasRestantes == 0) {
-                            evaluacionesPendientes = evaluacionesList.toList()
-                            asesoriasProximas = proximasList.toList()
-                            loading = false
-                        }
+                            .addOnFailureListener { e ->
+                                Log.e("Notificaciones", "Error al obtener rechazadas: ${e.message}", e)
+                                asesoriasRechazadas = emptyList()
+                                loading = false
+                            }
                     }
-                }
+                    .addOnFailureListener { e ->
+                        Log.e("Notificaciones", "Error al obtener asesorías: ${e.message}", e)
+                        loading = false
+                    }
             }
             .addOnFailureListener { e ->
-                Log.e("Notificaciones", "Error al obtener asesorías: ${e.message}")
+                Log.e("Notificaciones", "Error al obtener opiniones: ${e.message}", e)
                 loading = false
             }
     }
@@ -254,7 +369,7 @@ fun PaginaNotificacionesAprendiz(
                     }
                 }
 
-                evaluacionesPendientes.isEmpty() && asesoriasProximas.isEmpty() -> {
+                evaluacionesPendientes.isEmpty() && asesoriasProximas.isEmpty() && asesoriasRechazadas.isEmpty() -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -345,9 +460,111 @@ fun PaginaNotificacionesAprendiz(
                                     navController = navController
                                 )
                             }
+
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+
+                        // SECCIÓN: Asesorías Rechazadas
+                        if (asesoriasRechazadas.isNotEmpty()) {
+                            item {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Cancel,
+                                        contentDescription = null,
+                                        tint = Color(0xFF6B7280),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Asesorías Rechazadas",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1F2937)
+                                    )
+                                }
+                            }
+
+                            items(asesoriasRechazadas) { asesoria ->
+                                AsesoriaRechazadaCard(
+                                    asesoria = asesoria,
+                                    navController = navController
+                                )
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// Card para Asesorías Rechazadas
+@Composable
+fun AsesoriaRechazadaCard(
+    asesoria: Map<String, Any>,
+    navController: NavController
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Encabezado con ícono
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Cancel,
+                    contentDescription = null,
+                    tint = Color(0xFF6B7280),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Solicitud Rechazada",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF6B7280)
+                )
+            }
+
+            // Mensaje principal
+            Text(
+                text = "Tu solicitud de asesoría sobre ${asesoria["tema"]} programada para ${asesoria["fecha"]} a las ${asesoria["hora"]} fue rechazada por ${asesoria["nombreInstructor"]}.",
+                fontSize = 14.sp,
+                color = Color(0xFF4B5563),
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Botón para ver perfil
+            Button(
+                onClick = {
+                    navController.navigate("perfil_instructor/${asesoria["idInstructor"]}")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6B7280)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Ver perfil del instructor")
             }
         }
     }
@@ -391,7 +608,6 @@ fun obtenerDatosInstructor(
             callback("Instructor")
         }
 }
-
 @Composable
 fun EvaluacionCardAprendiz(
     asesoria: Map<String, Any>,
