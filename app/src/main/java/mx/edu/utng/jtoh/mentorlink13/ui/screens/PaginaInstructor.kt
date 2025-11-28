@@ -447,7 +447,7 @@ fun PaginaInstructor(navController: NavController){
                             tint = Color.DarkGray,
                             modifier = Modifier.size(40.dp)
                                 .clickable {
-                                    navController.navigate("perfil_instructor/$instructorId.toString()}")
+                                    navController.navigate("pantalla_editable_de_instructor/{idInstructor}")
                                 }
                         )
                         Spacer(Modifier.height(5.dp))

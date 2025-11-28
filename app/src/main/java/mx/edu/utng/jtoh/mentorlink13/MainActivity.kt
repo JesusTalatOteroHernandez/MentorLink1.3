@@ -35,6 +35,7 @@ import mx.edu.utng.jtoh.mentorlink13.ui.screens.PerfilInstructorEditable
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.SolicitarAsesoria
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroAprendiz
 import mx.edu.utng.jtoh.mentorlink13.ui.screens.registroTutor
+import mx.edu.utng.jtoh.mentorlink13.ui.splash.SplashScreenAvanzado
 
 
 class MainActivity : ComponentActivity() {
@@ -51,6 +52,9 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = "pantalla_inicio"
                 ) {
+                    composable("spalsh"){
+                        SplashScreenAvanzado(navController)
+                    }
                     composable("pantalla_inicio") {
                         pantallaDeInicio(navController)
                     }
