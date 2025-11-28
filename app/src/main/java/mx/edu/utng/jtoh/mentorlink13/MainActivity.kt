@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
                     composable("calificar_instructor/{idInstructor}/{id}") { backStackEntry ->
                         val idInstructor = backStackEntry.arguments?.getString("idInstructor") ?: ""
-                        val id = backStackEntry.arguments?.getString("idInstructor") ?: ""
+                        val id = backStackEntry.arguments?.getString("id") ?: ""
                         PantallaCalificarInstructor(navController, idInstructor,id)
                     }
 

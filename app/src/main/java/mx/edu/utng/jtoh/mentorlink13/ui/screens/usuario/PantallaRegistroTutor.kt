@@ -13,25 +13,45 @@ puntuacion 5
  */
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +60,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -55,341 +80,701 @@ fun registroTutor(navController: NavController){
     var passwordNuevamente by remember { mutableStateOf("") }
     var nuevoPassword by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    val isValid = email.contains("@")
+    var visible by remember { mutableStateOf(false) }
+    var visibleConfirm by remember { mutableStateOf(false) }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
-
     var estadoResidencia by remember { mutableStateOf("") }
     var municipioResidencia by remember { mutableStateOf("") }
+    var expandedEstado by remember { mutableStateOf(false) }
+    var expandedMunicipio by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
+    var messageColor by remember { mutableStateOf(Color.Red) }
+    var isLoading by remember { mutableStateOf(false) }
+    var emailExistsMessage by remember { mutableStateOf("") }
+    var isCheckingEmail by remember { mutableStateOf(false) }
 
     val municipios = estadosConMunicipios[estadoResidencia] ?: emptyList()
 
-    //Variable para el Scrol de la pantalla
+    // Validaciones mejoradas
+    val isEmailValid = email.isNotEmpty() && email.contains("@") && email.contains(".")
+    val isPasswordValid = nuevoPassword.length >= 8
+    val passwordsMatch = nuevoPassword == passwordNuevamente && passwordNuevamente.isNotEmpty()
+
+    // Verificar seguridad de contraseña
+    val hasUpperCase = nuevoPassword.any { it.isUpperCase() }
+    val hasLowerCase = nuevoPassword.any { it.isLowerCase() }
+    val hasDigit = nuevoPassword.any { it.isDigit() }
+    val hasSpecialChar = nuevoPassword.any { !it.isLetterOrDigit() }
+    val isPasswordSecure = hasUpperCase && hasLowerCase && hasDigit && isPasswordValid
+
     val scrollState = rememberScrollState()
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val context = LocalContext.current
+
+    // Verificar si el email ya existe en tiempo real
+    LaunchedEffect (email) {
+        if (email.isNotEmpty() && email.contains("@") && email.contains(".")) {
+            isCheckingEmail = true
+            emailExistsMessage = ""
+
+            // Delay para no hacer demasiadas peticiones mientras el usuario escribe
+            kotlinx.coroutines.delay(800)
+
+            auth.fetchSignInMethodsForEmail(email)
+                .addOnSuccessListener { result ->
+                    isCheckingEmail = false
+                    if (result.signInMethods?.isNotEmpty() == true) {
+                        emailExistsMessage = "Este correo ya está registrado"
+                    } else {
+                        emailExistsMessage = ""
+                    }
+                }
+                .addOnFailureListener {
+                    isCheckingEmail = false
+                    emailExistsMessage = ""
+                }
+        } else {
+            emailExistsMessage = ""
+            isCheckingEmail = false
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(180, 180, 180) //230, 230, 235
+        color = Color(180, 180, 180)
     ) {
-        //Mantiene todos los componentes adnetro centralizado
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
-
         ) {
-            //Realiza un pequeño apartado para el titulo de la pantalla
-            Card {
+            // Título
+            Card(
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("TUTOR")
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = "Tutor",
+                        tint = Color(0xFF2B5FDB),
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Registro de Tutor",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            //Apartado para que los apartados de texto esten centrados
-            Card {
+            Card(
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column {
+                    // Correo electrónico
+                    Text(
+                        "Correo electrónico",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            message = ""
+                        },
+                        label = { Text("ejemplo@correo.com") },
+                        isError = (email.isNotEmpty() && !isEmailValid) || emailExistsMessage.isNotEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Email"
+                            )
+                        },
+                        trailingIcon = {
+                            if (isCheckingEmail) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        },
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+                    if (email.isNotEmpty() && !isEmailValid) {
                         Text(
-                            "Ingresa tu correo electronico:",
-                            style = MaterialTheme.typography.bodyMedium
+                            "Ingresa un correo válido",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, top = 4.dp)
                         )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar el correo electronico
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
-                            label = { Text("Correo Electronico") },
-                            isError = !isValid,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        //Valida que cumpla con los requerimientos para un correo electronico
-                        if (!isValid) {
+                    }
+                    if (emailExistsMessage.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color.Red,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
                             Text(
-                                "Correo Invalido", color = Color.Red,
+                                emailExistsMessage,
+                                color = Color.Red,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            "Ingresa una contraseña:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar contraseña
-                        OutlinedTextField(
-                            value = nuevoPassword,
-                            onValueChange = { nuevoPassword = it },
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth()
-
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            "Ingresa Nuevamente la contraseña:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar contraseña nuevamente
-                        OutlinedTextField(
-                            value = passwordNuevamente,
-                            onValueChange = { passwordNuevamente = it },
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            "Ingrese su nombre:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar nombre
-                        OutlinedTextField(
-                            value = nombre,
-                            onValueChange = { nombre = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            "Ingrese su apellido:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar apellido
-                        OutlinedTextField(
-                            value = apellido,
-                            onValueChange = { apellido = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            "Ingrese su edad:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(Modifier.height(3.dp))
-                        //Apartado para ingresar edad
-                        OutlinedTextField(
-                            value = edad,
-                            onValueChange = { edad = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        //COMBOBOX PARA EL ESTADO DE RESIDENCIA
-                        Spacer(Modifier.height(16.dp))
-                        Text("Estado de residencia:", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(3.dp))
-
-                        var expandedEstado by remember { mutableStateOf(false) }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expandedEstado,
-                            onExpandedChange = { expandedEstado = it },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-
-                            OutlinedTextField(
-                                value = estadoResidencia,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Selecciona un estado") },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado)
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expandedEstado,
-                                onDismissRequest = { expandedEstado = false }
-                            ) {
-                                estadosConMunicipios.keys.forEach { estado ->
-                                    DropdownMenuItem(
-                                        text = { Text(estado) },
-                                        onClick = {
-                                            estadoResidencia = estado
-                                            municipioResidencia = ""
-                                            expandedEstado = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        //COMBOBOX PARA EL MUNICIPIO DE RESIDENCIA
-                        Spacer(Modifier.height(16.dp))
-                        Text("Municipio de residencia:", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(3.dp))
-
-                        var expandedMunicipio by remember { mutableStateOf(false) }
-
-                        ExposedDropdownMenuBox(
-                            expanded = expandedMunicipio,
-                            onExpandedChange = { expandedMunicipio = it },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-
-                            OutlinedTextField(
-                                value = municipioResidencia,
-                                onValueChange = {},
-                                readOnly = true,
-                                enabled = municipios.isNotEmpty(),
-                                label = {
-                                    Text(
-                                        if (estadoResidencia.isEmpty())
-                                            "Seleccione un estado primero"
-                                        else
-                                            "Seleccione un municipio"
-                                    )
-                                },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMunicipio)
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expandedMunicipio,
-                                onDismissRequest = { expandedMunicipio = false }
-                            ) {
-                                municipios.forEach { municipio ->
-                                    DropdownMenuItem(
-                                        text = { Text(municipio) },
-                                        onClick = {
-                                            municipioResidencia = municipio
-                                            expandedMunicipio = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    //Boton para registrar tutor
-                    var message by remember { mutableStateOf("") }
-                    val auth = FirebaseAuth.getInstance()
-                    val db = FirebaseFirestore.getInstance()
-                    val context = LocalContext.current
-                    FirebaseApp.initializeApp(context)
+
+                    // Contraseña
+                    Text(
+                        "Contraseña",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = nuevoPassword,
+                        onValueChange = {
+                            nuevoPassword = it
+                            message = ""
+                        },
+                        label = { Text("Mínimo 8 caracteres") },
+                        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = nuevoPassword.isNotEmpty() && !isPasswordValid,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Password"
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton (onClick = { visible = !visible }) {
+                                Icon(
+                                    imageVector = if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = if (visible) "Ocultar" else "Mostrar"
+                                )
+                            }
+                        },
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+
+                    // Indicadores de seguridad de contraseña
+                    if (nuevoPassword.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, top = 8.dp)
+                        ) {
+                            Text(
+                                "Requisitos de seguridad:",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.DarkGray
+                            )
+                            Spacer(Modifier.height(4.dp))
+
+                            PasswordRequirementTutor("Al menos 8 caracteres", isPasswordValid)
+                            PasswordRequirementTutor("Una letra mayúscula", hasUpperCase)
+                            PasswordRequirementTutor("Una letra minúscula", hasLowerCase)
+                            PasswordRequirementTutor("Un número", hasDigit)
+                            PasswordRequirementTutor("Un carácter especial (@, #, $, etc.)", hasSpecialChar)
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Confirmar contraseña
+                    Text(
+                        "Confirmar contraseña",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = passwordNuevamente,
+                        onValueChange = {
+                            passwordNuevamente = it
+                            message = ""
+                        },
+                        label = { Text("Repite la contraseña") },
+                        visualTransformation = if (visibleConfirm) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = passwordNuevamente.isNotEmpty() && !passwordsMatch,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Confirm Password"
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { visibleConfirm = !visibleConfirm }) {
+                                Icon(
+                                    imageVector = if (visibleConfirm) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = if (visibleConfirm) "Ocultar" else "Mostrar"
+                                )
+                            }
+                        },
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+                    if (passwordNuevamente.isNotEmpty() && !passwordsMatch) {
+                        Text(
+                            "Las contraseñas no coinciden",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, top = 4.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Nombre
+                    Text(
+                        "Nombre",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = nombre,
+                        onValueChange = {
+                            nombre = it
+                            message = ""
+                        },
+                        label = { Text("Tu nombre") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Apellido
+                    Text(
+                        "Apellido",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = apellido,
+                        onValueChange = {
+                            apellido = it
+                            message = ""
+                        },
+                        label = { Text("Tus apellidos") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Edad
+                    Text(
+                        "Edad",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = edad,
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() } && it.length <= 3) {
+                                edad = it
+                                message = ""
+                            }
+                        },
+                        label = { Text("Tu edad") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = !isLoading
+                    )
+                    if (edad.isNotEmpty() && (edad.toIntOrNull() == null || edad.toInt() < 15 || edad.toInt() > 100)) {
+                        Text(
+                            "Ingresa una edad válida (15-100)",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, top = 4.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Estado de residencia
+                    Text(
+                        "Estado de residencia",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ExposedDropdownMenuBox(
+                        expanded = expandedEstado,
+                        onExpandedChange = { expandedEstado = it && !isLoading },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = estadoResidencia,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Selecciona un estado") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado)
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            enabled = !isLoading
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedEstado,
+                            onDismissRequest = { expandedEstado = false }
+                        ) {
+                            estadosConMunicipios.keys.forEach { estado ->
+                                DropdownMenuItem(
+                                    text = { Text(estado) },
+                                    onClick = {
+                                        estadoResidencia = estado
+                                        municipioResidencia = ""
+                                        expandedEstado = false
+                                        message = ""
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Municipio de residencia
+                    Text(
+                        "Municipio de residencia",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ExposedDropdownMenuBox(
+                        expanded = expandedMunicipio,
+                        onExpandedChange = { expandedMunicipio = it && municipios.isNotEmpty() && !isLoading },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = municipioResidencia,
+                            onValueChange = {},
+                            readOnly = true,
+                            enabled = municipios.isNotEmpty() && !isLoading,
+                            label = {
+                                Text(
+                                    if (estadoResidencia.isEmpty())
+                                        "Selecciona un estado primero"
+                                    else
+                                        "Selecciona un municipio"
+                                )
+                            },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMunicipio)
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedMunicipio,
+                            onDismissRequest = { expandedMunicipio = false }
+                        ) {
+                            municipios.forEach { municipio ->
+                                DropdownMenuItem(
+                                    text = { Text(municipio) },
+                                    onClick = {
+                                        municipioResidencia = municipio
+                                        expandedMunicipio = false
+                                        message = ""
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // Mensaje de error/éxito
+                    if (message.isNotEmpty()) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (messageColor == Color.Red)
+                                    Color(0xFFFFEBEE) else Color(0xFFE8F5E9)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = message,
+                                color = messageColor,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(Modifier.height(16.dp))
+                    }
+
+                    // Botón de registrar
                     Button(
-                        modifier = Modifier,
-                        colors = ButtonDefaults.buttonColors(Color(37, 99, 135)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2B5FDB)
+                        ),
+                        enabled = !isLoading,
                         onClick = {
-                            // VALIDACIONES
-                            if (email.isBlank() || nuevoPassword.isBlank() || passwordNuevamente.isBlank() ||
-                                nombre.isBlank() || apellido.isBlank() || edad.isBlank() ||
-                                estadoResidencia.isBlank() || municipioResidencia.isBlank()
-                            ) {
-                                message = "Completa todos los campos"
-                                return@Button
-                            }
+                            // VALIDACIONES COMPLETAS
+                            when {
+                                email.isBlank() -> {
+                                    message = "Por favor ingresa tu correo electrónico"
+                                    messageColor = Color.Red
+                                }
+                                !isEmailValid -> {
+                                    message = "El correo electrónico no es válido"
+                                    messageColor = Color.Red
+                                }
+                                emailExistsMessage.isNotEmpty() -> {
+                                    message = "Este correo ya está registrado. Usa otro correo"
+                                    messageColor = Color.Red
+                                }
+                                nuevoPassword.isBlank() -> {
+                                    message = "Por favor ingresa una contraseña"
+                                    messageColor = Color.Red
+                                }
+                                !isPasswordValid -> {
+                                    message = "La contraseña debe tener al menos 8 caracteres"
+                                    messageColor = Color.Red
+                                }
+                                !isPasswordSecure -> {
+                                    message = "La contraseña debe incluir mayúsculas, minúsculas y números"
+                                    messageColor = Color.Red
+                                }
+                                passwordNuevamente.isBlank() -> {
+                                    message = "Por favor confirma tu contraseña"
+                                    messageColor = Color.Red
+                                }
+                                !passwordsMatch -> {
+                                    message = "Las contraseñas no coinciden"
+                                    messageColor = Color.Red
+                                }
+                                nombre.isBlank() -> {
+                                    message = "Por favor ingresa tu nombre"
+                                    messageColor = Color.Red
+                                }
+                                apellido.isBlank() -> {
+                                    message = "Por favor ingresa tus apellidos"
+                                    messageColor = Color.Red
+                                }
+                                edad.isBlank() -> {
+                                    message = "Por favor ingresa tu edad"
+                                    messageColor = Color.Red
+                                }
+                                edad.toIntOrNull() == null || edad.toInt() < 18 || edad.toInt() > 100 -> {
+                                    message = "Por favor ingresa una edad válida (15-100)"
+                                    messageColor = Color.Red
+                                }
+                                estadoResidencia.isBlank() -> {
+                                    message = "Por favor selecciona tu estado de residencia"
+                                    messageColor = Color.Red
+                                }
+                                municipioResidencia.isBlank() -> {
+                                    message = "Por favor selecciona tu municipio de residencia"
+                                    messageColor = Color.Red
+                                }
+                                else -> {
+                                    // Todas las validaciones pasaron
+                                    isLoading = true
+                                    message = ""
 
-                            if (nuevoPassword != passwordNuevamente) {
-                                message = "Las contraseñas no coinciden"
-                                return@Button
-                            }
+                                    auth.createUserWithEmailAndPassword(email, nuevoPassword)
+                                        .addOnSuccessListener { authResult ->
+                                            val userId = authResult.user?.uid
 
-                            // CREAR USUARIO EN AUTH
-                            auth.createUserWithEmailAndPassword(email, nuevoPassword)
-                                .addOnSuccessListener { authResult ->
+                                            if (userId == null) {
+                                                isLoading = false
+                                                message = "Error al crear usuario"
+                                                messageColor = Color.Red
+                                                return@addOnSuccessListener
+                                            }
 
-                                    val userId = authResult.user?.uid ?: return@addOnSuccessListener
-
-                                    // =======================================
-                                    // 1️⃣ CREAR DOCUMENTO EN "instructores"
-                                    // =======================================
-                                    val instructorId = db.collection("instructores").document().id
-
-                                    val instructorData = hashMapOf(
-                                        "id" to instructorId,
-                                        "idUsuario" to userId,
-                                        "puntuacion" to 0 //Estara asi hasta que implementemos el sistema de puntuacion
-                                    )
-
-                                    db.collection("instructores")
-                                        .document(instructorId)
-                                        .set(instructorData)
-                                        .addOnSuccessListener {
-
-                                            // =======================================
-                                            // 2️⃣ GUARDAR DATOS EN "usuarios"
-                                            // =======================================
-                                            val usuarioData = hashMapOf(
-                                                "id" to userId,
-                                                "nombre" to nombre,
-                                                "apellidos" to apellido,
-                                                "edad" to edad.toIntOrNull(),
-                                                "correoElectronico" to email,
-                                                "municipioResidencia" to municipioResidencia,
-                                                "estadoResidencia" to estadoResidencia,
-                                                "password" to "", // NO guardar contraseñas reales
-                                                "tipoUsuario" to "tutor"   // ⭐ para diferenciarlos
+                                            // Crear documento en instructores
+                                            val instructorId = db.collection("instructores").document().id
+                                            val instructorData = hashMapOf(
+                                                "id" to instructorId,
+                                                "idUsuario" to userId,
+                                                "puntuacion" to 0
                                             )
 
-                                            db.collection("usuarios")
-                                                .document(userId)
-                                                .set(usuarioData)
+                                            db.collection("instructores")
+                                                .document(instructorId)
+                                                .set(instructorData)
                                                 .addOnSuccessListener {
-                                                    message = "Tutor registrado correctamente"
-                                                    navController.navigate("pantalla_epecialidad_tutor")
-                                                }
-                                                .addOnFailureListener {
-                                                    message = "Error al guardar en usuarios"
-                                                }
-                                        }
-                                        .addOnFailureListener {
-                                            message = "Error al guardar en instructores"
-                                        }
-                                }
-                                .addOnFailureListener {
-                                    message = "Error al crear usuario"
-                                }
-                        }
+                                                    // Crear documento en usuarios
+                                                    val usuarioData = hashMapOf(
+                                                        "id" to userId,
+                                                        "nombre" to nombre.trim(),
+                                                        "apellidos" to apellido.trim(),
+                                                        "edad" to edad.toInt(),
+                                                        "correoElectronico" to email.trim(),
+                                                        "municipioResidencia" to municipioResidencia,
+                                                        "estadoResidencia" to estadoResidencia,
+                                                        "password" to "",
+                                                        "tipoUsuario" to "tutor"
+                                                    )
 
+                                                    db.collection("usuarios")
+                                                        .document(userId)
+                                                        .set(usuarioData)
+                                                        .addOnSuccessListener {
+                                                            isLoading = false
+                                                            message = "¡Registro exitoso! Redirigiendo..."
+                                                            messageColor = Color(0xFF4CAF50)
+
+                                                            // Navegar después de un breve delay
+                                                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                                                navController.navigate("pantalla_epecialidad_tutor") {
+                                                                    popUpTo(0) { inclusive = true }
+                                                                }
+                                                            }, 1500)
+                                                        }
+                                                        .addOnFailureListener { exception ->
+                                                            isLoading = false
+                                                            message = "Error al guardar datos: ${exception.localizedMessage}"
+                                                            messageColor = Color.Red
+                                                        }
+                                                }
+                                                .addOnFailureListener { exception ->
+                                                    isLoading = false
+                                                    message = "Error al crear perfil: ${exception.localizedMessage}"
+                                                    messageColor = Color.Red
+                                                }
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            isLoading = false
+                                            message = when {
+                                                exception.message?.contains("email address is already") == true ->
+                                                    "Este correo ya está registrado"
+                                                exception.message?.contains("network") == true ->
+                                                    "Error de conexión. Verifica tu internet"
+                                                else -> "Error al crear cuenta: ${exception.localizedMessage}"
+                                            }
+                                            messageColor = Color.Red
+                                        }
+                                }
+                            }
+                        }
                     ) {
-                        Text("Siguiente")
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Siguiente", fontSize = 16.sp)
+                        }
                     }
 
-                    Spacer(Modifier.height(16.dp))
-                    //Botom para regresar
-                    Button(
-                        modifier = Modifier,
-                        colors = ButtonDefaults.buttonColors(Color(37, 99, 135)),
+                    Spacer(Modifier.height(12.dp))
+
+                    // Botón de regresar
+                    OutlinedButton (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
                         onClick = {
-                            navController.navigate("pantalla_inicio")
-                        }
-
+                            navController.navigate("pantalla_inicio") {
+                                popUpTo("pantalla_inicio") { inclusive = true }
+                            }
+                        },
+                        enabled = !isLoading
                     ) {
-                        Text("Regresar")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Regresar",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Regresar", fontSize = 16.sp)
                     }
+
                     Spacer(Modifier.height(16.dp))
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PasswordRequirementTutor(text: String, isMet: Boolean) {
+    Row (
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 2.dp)
+    ) {
+        Icon(
+            imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.Cancel,
+            contentDescription = null,
+            tint = if (isMet) Color(0xFF4CAF50) else Color.Gray,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isMet) Color(0xFF4CAF50) else Color.Gray
+        )
     }
 }

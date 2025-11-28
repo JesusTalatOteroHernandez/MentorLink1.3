@@ -36,6 +36,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.google.firebase.firestore.SetOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -422,17 +423,18 @@ fun EspecialidadTutor(navController: NavController){
                                 .addOnSuccessListener { instructoresSnapshot ->
                                     if (instructoresSnapshot.documents.isNotEmpty()) {
                                         val instructorDoc = instructoresSnapshot.documents[0]
-                                        val instructorId = instructorDoc.getString("id") ?: ""
+                                        val instructorId = instructorDoc.id // ← Usar document.id en lugar de getString("id")
 
                                         // 1️⃣ ACTUALIZAR instructores con modalidad y cobro
-                                        val instructorUpdate = mapOf<String, Any>(
+                                        // ⭐ CAMBIO AQUÍ: Usar set() con SetOptions.merge() en lugar de update()
+                                        val instructorUpdate = hashMapOf<String, Any>(
                                             "modalidad" to modalidadSeleccionada,
                                             "cobro" to (cobro.toIntOrNull() ?: 0)
                                         )
 
                                         db.collection("instructores")
                                             .document(instructorId)
-                                            .update(instructorUpdate)
+                                            .set(instructorUpdate, SetOptions.merge()) // ← CORRECCIÓN PRINCIPAL
                                             .addOnSuccessListener {
                                                 // 2️⃣ CREAR documentos en instructorTema para cada especialización
                                                 var errores = 0
@@ -462,23 +464,24 @@ fun EspecialidadTutor(navController: NavController){
                                                                 }
                                                             }
                                                         }
-                                                        .addOnFailureListener {
+                                                        .addOnFailureListener { exception ->
                                                             errores++
+                                                            message = "Error: ${exception.localizedMessage}"
                                                             if (exitosos + errores == especializacionesAgregadas.size) {
                                                                 message = "Error al guardar algunas especializaciones"
                                                             }
                                                         }
                                                 }
                                             }
-                                            .addOnFailureListener {
-                                                message = "Error al actualizar instructor"
+                                            .addOnFailureListener { exception ->
+                                                message = "Error al actualizar instructor: ${exception.localizedMessage}"
                                             }
                                     } else {
                                         message = "Error: Instructor no encontrado"
                                     }
                                 }
-                                .addOnFailureListener {
-                                    message = "Error al buscar instructor"
+                                .addOnFailureListener { exception ->
+                                    message = "Error al buscar instructor: ${exception.localizedMessage}"
                                 }
                         }
                     ) {
