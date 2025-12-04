@@ -18,3 +18,18 @@ Periodo: Septiembre - Diciembre 2025
 <li>Autenticación Segura: Login y registro con Firebase Authentication</li>
 <li>Interfaz Moderna: Diseño intuitivo basado en Material Design 3</li>
 <li>Navegación Fluida: Implementación con Jetpack Navigation Component</li>
+
+
+
+## Tecnologías Utilizadas
+### Lenguaje y Framework
+
+<li>Kotlin 1.9.0 - Lenguaje principal de desarrollo</li>
+<li>Jetpack Compose 1.5.4 - UI moderna y declarativa</li>
+<li>Material Design 3 - Sistema de diseño de Google</li>
+
+### Arquitectura y Patrones
+
+<li>Clean Architecture - Organización en capas</li>
+<li>Repository Pattern - Abstracción de fuentes de datos</li>
+<li>Dependency Injection - Hilt para inyección de dependencias</li>
