@@ -19,7 +19,8 @@ Periodo: Septiembre - Diciembre 2025
 <li>Interfaz Moderna: Diseño intuitivo basado en Material Design 3</li>
 <li>Navegación Fluida: Implementación con Jetpack Navigation Component</li>
 
-
+### Capturas de pantalla
+!()
 
 ## Tecnologías Utilizadas
 ### Lenguaje y Framework
