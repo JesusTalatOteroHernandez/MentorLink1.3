@@ -20,7 +20,7 @@ Periodo: Septiembre - Diciembre 2025
 <li>Navegación Fluida: Implementación con Jetpack Navigation Component</li>
 
 ### Capturas de pantalla
-!(https://github.com/JesusTalatOteroHernandez/MentorLink1.3/blob/780eae55fc05b7e1d9a0a6908ee4e542cd5c4df6/screenshots/ScreenShot1.jpeg)
+[Capturas de pantalla](https://github.com/JesusTalatOteroHernandez/MentorLink1.3/blob/780eae55fc05b7e1d9a0a6908ee4e542cd5c4df6/screenshots/ScreenShot1.jpeg)
 
 ## Tecnologías Utilizadas
 ### Lenguaje y Framework
