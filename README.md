@@ -11,17 +11,10 @@ Periodo: Septiembre - Diciembre 2025
 
 ## Características Principales
 <li>Búsqueda de Mentores: Encuentra mentores por área de especialización, disponibilidad y calificación</li>
-<br>
-Gestión de Perfil: Crea y edita tu perfil como mentor o estudiante con información detallada
-<br>
-Agendamiento de Sesiones: Programa sesiones de mentoría
-<br>
-Evaluación y Reseñas: Califica las sesiones y deja comentarios constructivos
-<br>
-Dashboard Personalizado: Visualiza tu progreso, próximas sesiones y notificaciones
-<br>
-Autenticación Segura: Login y registro con Firebase Authentication
-<br>
-Interfaz Moderna: Diseño intuitivo basado en Material Design 3
-<br>
-Navegación Fluida: Implementación con Jetpack Navigation Component
+<li>Gestión de Perfil: Crea y edita tu perfil como mentor o estudiante con información detallada</li>
+<li>Agendamiento de Sesiones: Programa sesiones de mentoría</li>
+<li>Evaluación y Reseñas: Califica las sesiones y deja comentarios constructivos</li>
+<li>Dashboard Personalizado: Visualiza tu progreso, próximas sesiones y notificaciones</li>
+<li>Autenticación Segura: Login y registro con Firebase Authentication</li>
+<li>Interfaz Moderna: Diseño intuitivo basado en Material Design 3</li>
+<li>Navegación Fluida: Implementación con Jetpack Navigation Component</li>
