@@ -24,8 +24,8 @@ Periodo: Septiembre - Diciembre 2025
 ## Tecnologías Utilizadas
 ### Lenguaje y Framework
 
-<li>Kotlin 1.9.0 - Lenguaje principal de desarrollo</li>
-<li>Jetpack Compose 1.5.4 - UI moderna y declarativa</li>
+<li>Kotlin 2.0.21 - Lenguaje principal de desarrollo</li>
+<li>Jetpack Compose 1.12.0 - UI moderna y declarativa</li>
 <li>Material Design 3 - Sistema de diseño de Google</li>
 
 ### Arquitectura y Patrones
@@ -71,3 +71,10 @@ dependencies {
 
 <li>Firebase Authentication - Gestión de usuarios</li>
 <li>Firebase Firestore - Base de datos NoSQL en tiempo real</li>
+
+### Herramientas de Desarrollo
+
+Android Studio Narval | 2025.1.2
+Gradle 8.12.3
+Git/GitHub - Control de versiones
+Figma - Diseño de interfaces (prototipado)
