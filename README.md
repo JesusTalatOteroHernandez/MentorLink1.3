@@ -10,7 +10,7 @@ Susana Cardenas Vazquez
 Periodo: Septiembre - Diciembre 2025
 
 ## Características Principales
-Búsqueda de Mentores: Encuentra mentores por área de especialización, disponibilidad y calificación
+<li>Búsqueda de Mentores: Encuentra mentores por área de especialización, disponibilidad y calificación</li>
 <br>
 Gestión de Perfil: Crea y edita tu perfil como mentor o estudiante con información detallada
 <br>
