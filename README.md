@@ -74,7 +74,7 @@ dependencies {
 
 ### Herramientas de Desarrollo
 
-Android Studio Narval | 2025.1.2
-Gradle 8.12.3
-Git/GitHub - Control de versiones
-Figma - Diseño de interfaces (prototipado)
+<li>Android Studio Narval | 2025.1.2</li>
+<li>Gradle 8.12.3</li>
+<li>Git/GitHub - Control de versiones</li>
+<li>Figma - Diseño de interfaces (prototipado)</li>
