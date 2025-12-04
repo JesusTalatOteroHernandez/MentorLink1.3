@@ -4,6 +4,7 @@ La plataforma permite a los usuarios buscar mentores especializados en diferente
 Desarrollado por:
 
 Jesús Talat Otero Hernández
+<br>
 Susana Cardenas Vazquez
 
 Periodo: Septiembre - Diciembre 2025
