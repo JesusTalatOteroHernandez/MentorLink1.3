@@ -66,3 +66,8 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 }
+
+### Backend y Base de Datos
+
+<li>Firebase Authentication - Gestión de usuarios</li>
+<li>Firebase Firestore - Base de datos NoSQL en tiempo real</li>
