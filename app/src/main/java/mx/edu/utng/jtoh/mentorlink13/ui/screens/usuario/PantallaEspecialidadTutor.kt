@@ -495,7 +495,7 @@ fun EspecialidadTutor(navController: NavController){
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(Color(37, 99, 135)),
                         onClick = {
-                            navController.popBackStack()
+                            navController.navigate("pantalla_registro_tutor")
                         }
                     ) {
                         Text("Regresar")
